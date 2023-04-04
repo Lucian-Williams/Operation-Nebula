@@ -79,6 +79,8 @@ MonoBehaviour:
   maneuverMode: 0
   markerPrefab: {fileID: 9098818575809601122, guid: cca190c87ec6e7b4f95e8309aac83338, type: 3}
   marker: {fileID: 0}
+  rangeMarkerPrefab: {fileID: 8168372205358329051, guid: 9e9414436d5bad1438e154b667800e64, type: 3}
+  rangeMarker: {fileID: 0}
   gameMaster: {fileID: 0}
   detected: 0
   thrust: 1

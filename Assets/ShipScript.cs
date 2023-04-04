@@ -16,6 +16,10 @@ public class ShipScript : MonoBehaviour
 
     public GameObject marker;
 
+    public GameObject rangeMarkerPrefab;
+
+    public GameObject rangeMarker;
+
     public GameObject gameMaster;
 
     public bool detected;
@@ -45,6 +49,9 @@ public class ShipScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        float sqrDist = Vector3.SqrMagnitude(transform.position);
+        float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
+        float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
         float deltaV = Time.deltaTime * thrust / rb.mass;
         Vector3 relativeVelocity;
         Vector3 relativePosition;
@@ -53,6 +60,7 @@ public class ShipScript : MonoBehaviour
         Vector3 radialVelocity;
         Vector3 lateralVelocity;
         marker.transform.position = new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180);
+        rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1);
         if (referenceBody == null || referenceBody == rb)
             return;
         switch (maneuverMode) {
@@ -93,6 +101,9 @@ public class ShipScript : MonoBehaviour
 
     public void Startup()
     {
+        float sqrDist = Vector3.SqrMagnitude(transform.position);
+        float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
+        float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
         marker = Instantiate(markerPrefab, new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180), Quaternion.identity);
         marker.TryGetComponent<DesignationScript>(out DesignationScript temp);
         if (temp)
@@ -100,6 +111,8 @@ public class ShipScript : MonoBehaviour
             temp.creator = gameObject;
             temp.gameMaster = gameMaster;
         }
+        rangeMarker = Instantiate(rangeMarkerPrefab, marker.transform);
+        rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1);
     }
 
     void SetTargetPosition(Vector3 targetPosition)
