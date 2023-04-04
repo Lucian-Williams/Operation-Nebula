@@ -16,6 +16,8 @@ public class ShipScript : MonoBehaviour
 
     public GameObject marker;
 
+    public GameObject gameMaster;
+
     public bool detected;
 
     public float thrust;
@@ -51,7 +53,6 @@ public class ShipScript : MonoBehaviour
         Vector3 radialVelocity;
         Vector3 lateralVelocity;
         marker.transform.position = new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180);
-        Debug.Log(MarkerBearing() + " " + MarkerElevation());
         if (referenceBody == null || referenceBody == rb)
             return;
         switch (maneuverMode) {
@@ -93,6 +94,12 @@ public class ShipScript : MonoBehaviour
     public void Startup()
     {
         marker = Instantiate(markerPrefab, new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180), Quaternion.identity);
+        marker.TryGetComponent<DesignationScript>(out DesignationScript temp);
+        if (temp)
+        {
+            temp.creator = gameObject;
+            temp.gameMaster = gameMaster;
+        }
     }
 
     void SetTargetPosition(Vector3 targetPosition)
@@ -104,6 +111,8 @@ public class ShipScript : MonoBehaviour
     {
         float x = this.transform.position.x;
         float y = this.transform.position.y;
+        if (x == 0 && y == 0)
+            return 0;
         Vector3 flattenedPosition = new Vector3(x, y, 0);
         float bearing = Vector3.Angle(flattenedPosition, Vector3.right);
         
@@ -118,6 +127,14 @@ public class ShipScript : MonoBehaviour
         float x = this.transform.position.x;
         float y = this.transform.position.y;
         float z = this.transform.position.z;
+        if (x == 0 && y == 0)
+        {
+            if (z > 0)
+                return 90;
+            if (z == 0)
+                return 0;
+            return -90;
+        }
         Vector3 flattenedPosition = new Vector3(x, y, 0);
         float elevation = Vector3.Angle(flattenedPosition, this.transform.position);
 
@@ -125,5 +142,13 @@ public class ShipScript : MonoBehaviour
             elevation = -elevation;
 
         return elevation;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Destroy(other.GetComponent<ShipScript>().marker);
+        Destroy(marker);
+        Destroy(other);
+        Destroy(this);
     }
 }

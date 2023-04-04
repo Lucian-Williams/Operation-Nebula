@@ -12,8 +12,8 @@ GameObject:
   - component: {fileID: 2760871906525009344}
   - component: {fileID: 6599322556197208828}
   - component: {fileID: 8451961965445916672}
-  m_Layer: 0
-  m_Name: Scout Prefab
+  m_Layer: 6
+  m_Name: FriendlyScout
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -45,7 +45,7 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 1
+  m_Radius: 0.01
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6599322556197208828
 Rigidbody:
@@ -77,11 +77,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shipClass: 0
   maneuverMode: 0
-  markerPrefab: {fileID: 9098818575809601122, guid: b24c1d4329716fb4ab0be9368c0bc8f3, type: 3}
+  markerPrefab: {fileID: 9098818575809601122, guid: ef750fe4448bd3541b4245ba0fb663e5, type: 3}
   marker: {fileID: 0}
-  radarScreen: {fileID: 0}
+  gameMaster: {fileID: 0}
   detected: 0
-  thrust: 100
+  thrust: 1
   radarCrossSection: 0
   radarPower: 0
   radarSensitivity: 0
