@@ -31,12 +31,17 @@ public class GameMaster : MonoBehaviour
     public List<GameObject> enemies;
 
     public List<GameObject> enemyMissiles;
+
+    public bool isPaused = false;
+
+    private bool gameOver = false;
     // Start is called before the first frame update
     void Start()
     {
         Random.InitState(1776);
         StartCoroutine(SpawnEnemies());
         StartCoroutine(SpawnMissiles());
+        StartCoroutine(DispatchMissiles());
         friendlies.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, -1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
         friendlies[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlies[0].GetComponent<ShipScript>().gameMaster = gameObject;
@@ -50,6 +55,15 @@ public class GameMaster : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (isPaused)
+            return;
+        if (friendlies.Count == 0 && !gameOver)
+            gameOver = true;
+        if (gameOver)
+        {
+            Time.timeScale = 0;
+            return;
+        }
         if (target && !target.TryGetComponent<ShipScript>(out ShipScript non))
             target = null;
         CleanShips();
@@ -157,6 +171,26 @@ public class GameMaster : MonoBehaviour
         {
             RandomSpawn(friendlyMissilePrefab, friendlyMissileOrganizer, friendlyMissiles, Vector3.zero, Vector3.zero, 10, 2);
             yield return new WaitForSeconds(10);
+        }
+    }
+
+    IEnumerator DispatchMissiles()
+    {
+        int i = 0;
+        while (true)
+        {
+            if (i >= enemyMissiles.Count)
+            {
+                i = i % enemyMissiles.Count;
+            }
+
+            if (friendlies.Count > 0)
+            {
+                enemyMissiles[i].GetComponent<ShipScript>().referenceBody = friendlies[Random.Range(0, friendlies.Count)].GetComponent<Rigidbody>();
+                enemyMissiles[i].GetComponent<ShipScript>().maneuverMode = ShipScript.ManeuverMode.Intercept;
+            }
+            yield return new WaitForSeconds(2);
+            i++;
         }
     }
 }

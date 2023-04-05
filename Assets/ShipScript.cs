@@ -49,6 +49,8 @@ public class ShipScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (gameMaster.GetComponent<GameMaster>().isPaused)
+            return;
         float sqrDist = Vector3.SqrMagnitude(transform.position);
         float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
         float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
