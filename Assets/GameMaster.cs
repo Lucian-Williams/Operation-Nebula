@@ -16,6 +16,10 @@ public class GameMaster : MonoBehaviour
 
     public GameObject enemyOrganizer;
 
+    public GameObject enemyMissilePrefab;
+
+    public GameObject enemyMissileOrganizer;
+
     public GameObject target;
 
     public GameObject targetSprite;
@@ -25,17 +29,14 @@ public class GameMaster : MonoBehaviour
     public List<GameObject> friendlyMissiles;
 
     public List<GameObject> enemies;
+
+    public List<GameObject> enemyMissiles;
     // Start is called before the first frame update
     void Start()
     {
-        enemies.Add(Instantiate(enemyPrefab, new Vector3(90, 0, 10), Quaternion.identity, enemyOrganizer.GetComponent<Transform>()));
-        enemies[0].GetComponent<Rigidbody>().velocity = new Vector3(-2, -0.1f, 0.1f);
-        enemies[0].GetComponent<ShipScript>().gameMaster = gameObject;
-        enemies[0].GetComponent<ShipScript>().Startup();
-        enemies.Add(Instantiate(enemyPrefab, new Vector3(120, 10, 0), Quaternion.identity, enemyOrganizer.GetComponent<Transform>()));
-        enemies[1].GetComponent<Rigidbody>().velocity = new Vector3(-2.2f, -0.1f, 0);
-        enemies[1].GetComponent<ShipScript>().gameMaster = gameObject;
-        enemies[1].GetComponent<ShipScript>().Startup();
+        Random.InitState(1776);
+        StartCoroutine(SpawnEnemies());
+        StartCoroutine(SpawnMissiles());
         friendlies.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, -1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
         friendlies[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlies[0].GetComponent<ShipScript>().gameMaster = gameObject;
@@ -44,14 +45,6 @@ public class GameMaster : MonoBehaviour
         friendlies[1].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlies[1].GetComponent<ShipScript>().gameMaster = gameObject;
         friendlies[1].GetComponent<ShipScript>().Startup();
-        friendlyMissiles.Add(Instantiate(friendlyMissilePrefab, new Vector3(1, -1, 0), Quaternion.identity, friendlyMissileOrganizer.GetComponent<Transform>()));
-        friendlyMissiles[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyMissiles[0].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyMissiles[0].GetComponent<ShipScript>().Startup();
-        friendlyMissiles.Add(Instantiate(friendlyMissilePrefab, new Vector3(1, 1, 0), Quaternion.identity, friendlyMissileOrganizer.GetComponent<Transform>()));
-        friendlyMissiles[1].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyMissiles[1].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyMissiles[1].GetComponent<ShipScript>().Startup();
     }
 
     // Update is called once per frame
@@ -115,10 +108,55 @@ public class GameMaster : MonoBehaviour
                 i--;
             }
         }
+        for (int i = 0; i < enemyMissiles.Count; i++)
+        {
+            if (!enemyMissiles[i].TryGetComponent<ShipScript>(out ShipScript non))
+            {
+                enemyMissiles.RemoveAt(i);
+                i--;
+            }
+        }
     }
 
-    void RandomSpawn(GameObject spawnPrefab, GameObject spawnOrganizer, List<GameObject> spawnList, float x, float y, float z, float size)
+    void RandomSpawn(GameObject spawnPrefab, GameObject spawnOrganizer, List<GameObject> spawnList, Vector3 location, Vector3 velocity, float radius, int count)
     {
+        for (int i = 0; i < count; i++)
+        {
+            GameObject temp = Instantiate(
+                spawnPrefab,
+                location + new Vector3(Random.Range(-radius, radius), Random.Range(-radius, radius), Random.Range(-radius, radius)),
+                Quaternion.identity,
+                spawnOrganizer.GetComponent<Transform>()
+                );
+            temp.GetComponent<Rigidbody>().velocity = velocity + new Vector3(Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f));
+            temp.GetComponent<ShipScript>().gameMaster = gameObject;
+            temp.GetComponent<ShipScript>().Startup();
+            spawnList.Add(temp);
+        }
+    }
 
+    IEnumerator SpawnEnemies()
+    {
+        while (true)
+        {
+            Vector3 direction = Random.onUnitSphere;
+            Vector3 spawnLocation = direction * Random.Range(100, 200);
+            Vector3 spawnVelocity = -direction * Random.Range(1, 2);
+            // Spawm between 2-10 targets
+            RandomSpawn(enemyPrefab, enemyOrganizer, enemies, spawnLocation, spawnVelocity, 10, Random.Range(2, 11));
+            // Spawn between 1-4 missiles
+            RandomSpawn(enemyMissilePrefab, enemyMissileOrganizer, enemyMissiles, spawnLocation, spawnVelocity, 10, Random.Range(1, 5));
+            // Yield return new waitforseconds 20-35 seconds
+            yield return new WaitForSeconds(Random.Range(20, 35));
+        }
+    }
+
+    IEnumerator SpawnMissiles()
+    {
+        while (true)
+        {
+            RandomSpawn(friendlyMissilePrefab, friendlyMissileOrganizer, friendlyMissiles, Vector3.zero, Vector3.zero, 10, 2);
+            yield return new WaitForSeconds(10);
+        }
     }
 }
