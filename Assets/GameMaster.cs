@@ -180,7 +180,10 @@ public class GameMaster : MonoBehaviour
         while (true)
         {
             if (enemyMissiles.Count < 1)
+            {
+                yield return new WaitForSeconds(2);
                 continue;
+            }
             if (i >= enemyMissiles.Count)
             {
                 i = i % enemyMissiles.Count;
