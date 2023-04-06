@@ -179,6 +179,8 @@ public class GameMaster : MonoBehaviour
         int i = 0;
         while (true)
         {
+            if (enemyMissiles.Count < 1)
+                continue;
             if (i >= enemyMissiles.Count)
             {
                 i = i % enemyMissiles.Count;
