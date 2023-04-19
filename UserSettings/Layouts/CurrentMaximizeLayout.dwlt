@@ -224,9 +224,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 
-      m_LastClickedID: 0
-      m_ExpandedIDs: 28fbffff
+      m_SelectedIDs: 7668ffff
+      m_LastClickedID: -38794
+      m_ExpandedIDs: 28fbffffb06b0000bc6b0000c06b0000c46b0000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -557,9 +557,9 @@ MonoBehaviour:
   m_PlayAudio: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: -0.94866437, y: -0.33780038, z: 0.0760657}
+    m_Target: {x: -0.3781421, y: 0.00038347766, z: 0.05441661}
     speed: 2
-    m_Value: {x: -0.94866437, y: -0.33780038, z: 0.0760657}
+    m_Value: {x: -0.3781421, y: 0.00038347766, z: 0.05441661}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -610,9 +610,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: 0, y: 0, z: 0, w: 1}
   m_Size:
-    m_Target: 2.394401
+    m_Target: 4.5593047
     speed: 2
-    m_Value: 2.394401
+    m_Value: 4.5593047
   m_Ortho:
     m_Target: 1
     speed: 2
@@ -705,21 +705,21 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets
+    - Assets/Prefabs
     m_Globs: []
     m_OriginalText: 
   m_ViewMode: 1
   m_StartGridSize: 64
   m_LastFolders:
-  - Assets
+  - Assets/Prefabs
   m_LastFoldersGridSize: -1
   m_LastProjectPath: E:\Unity Projects\gitProjects\Operation Nebula2
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: 6a6c0000
-    m_LastClickedID: 27754
+    m_SelectedIDs: de6d0000
+    m_LastClickedID: 28126
     m_ExpandedIDs: 000000006a6c000000ca9a3bffffff7f
     m_RenameOverlay:
       m_UserAcceptedRename: 0
@@ -773,8 +773,8 @@ MonoBehaviour:
       m_Icon: {fileID: 0}
       m_ResourceFile: 
   m_ListAreaState:
-    m_SelectedInstanceIDs: 
-    m_LastClickedInstanceID: 0
+    m_SelectedInstanceIDs: 7668ffff
+    m_LastClickedInstanceID: -38794
     m_HadKeyboardFocusLastEvent: 1
     m_ExpandedInstanceIDs: c62300004c7a00008c6d00008c7e0000
     m_RenameOverlay:
@@ -851,8 +851,8 @@ MonoBehaviour:
     y: 0
     width: 455
     height: 947
-  m_MinSize: {x: 276, y: 71}
-  m_MaxSize: {x: 4001, y: 4021}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 13}

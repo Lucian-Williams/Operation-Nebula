@@ -24,13 +24,25 @@ public class ShipScript : MonoBehaviour
 
     public bool detected;
 
+    public bool tracked;
+
+    public bool hasRadar;
+
+    public bool radarIsOn;
+
+    public bool hasIR;
+
     public float thrust;
 
     public float radarCrossSection;
 
     public float radarPower;
 
-    public float radarSensitivity;
+    public float baseIRSignature;
+
+    public float iRSignature;
+
+    public float iRSensitivity;
 
     public float targetRadius; // For Formation mode only
 
@@ -74,10 +86,12 @@ public class ShipScript : MonoBehaviour
                 if (deltaV * deltaV < Vector3.SqrMagnitude(velocityChange))
                 {
                     rb.AddForce(Vector3.Normalize(velocityChange) * deltaV, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + thrust;
                 }
                 else
                 {
                     rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + (Vector3.Magnitude(velocityChange) / deltaV);
                 }
                 break;
             case ManeuverMode.Intercept:
@@ -88,15 +102,23 @@ public class ShipScript : MonoBehaviour
                 if (deltaV * deltaV < Vector3.SqrMagnitude(lateralVelocity))
                 {
                     rb.AddForce(-Vector3.Normalize(lateralVelocity) * deltaV, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + thrust;
                 }
                 else
                 {
-                    rb.AddForce((-Vector3.Normalize(relativePosition) * Mathf.Sqrt(deltaV * deltaV - Vector3.SqrMagnitude(lateralVelocity))) - lateralVelocity, ForceMode.VelocityChange);
+                    velocityChange = (-Vector3.Normalize(relativePosition) * Mathf.Sqrt(deltaV * deltaV - Vector3.SqrMagnitude(lateralVelocity))) - lateralVelocity;
+                    rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + (Vector3.Magnitude(velocityChange) / deltaV);
                 }
                 break;
             case ManeuverMode.Formation:
+                iRSignature = baseIRSignature;
                 break;
             case ManeuverMode.Hold:
+                iRSignature = baseIRSignature;
+                break;
+            case ManeuverMode.Idle:
+                iRSignature = baseIRSignature;
                 break;
         }
     }
@@ -107,14 +129,37 @@ public class ShipScript : MonoBehaviour
         float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
         float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
         marker = Instantiate(markerPrefab, new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180), Quaternion.identity);
-        marker.TryGetComponent<DesignationScript>(out DesignationScript temp);
-        if (temp)
+        if (marker.TryGetComponent<DesignationScript>(out DesignationScript temp))
         {
             temp.creator = gameObject;
             temp.gameMaster = gameMaster;
         }
         rangeMarker = Instantiate(rangeMarkerPrefab, marker.transform);
         rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1);
+    }
+
+    public void setTracked()
+    {
+        detected = true;
+        tracked = true;
+        marker.SetActive(true);
+        rangeMarker.SetActive(true);
+    }
+
+    public void setDetected()
+    {
+        detected = true;
+        tracked = false;
+        marker.SetActive(true);
+        rangeMarker.SetActive(false);
+    }
+
+    public void setUndetected()
+    {
+        detected = false;
+        tracked = false;
+        marker.SetActive(false);
+        rangeMarker.SetActive(false);
     }
 
     void SetTargetPosition(Vector3 targetPosition)

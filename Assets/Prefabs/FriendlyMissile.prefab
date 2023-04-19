@@ -83,10 +83,16 @@ MonoBehaviour:
   rangeMarker: {fileID: 0}
   gameMaster: {fileID: 0}
   detected: 0
+  tracked: 0
+  hasRadar: 1
+  radarIsOn: 0
+  hasIR: 0
   thrust: 0.2
-  radarCrossSection: 0
-  radarPower: 0
-  radarSensitivity: 0
+  radarCrossSection: 1
+  radarPower: 10
+  baseIRSignature: 0.05
+  iRSignature: 0
+  iRSensitivity: 0
   targetRadius: 0
   targetPosition: {x: 0, y: 0, z: 0}
   rb: {fileID: 6599322556197208828}
