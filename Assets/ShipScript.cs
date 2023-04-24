@@ -137,7 +137,9 @@ public class ShipScript : MonoBehaviour
                         relativePosition = relativePosition - Vector3.Normalize(relativePosition + gradient) * targetRadius;
                     else
                         relativePosition = relativePosition - Vector3.Normalize(relativePosition) * targetRadius;
-                } else {
+                }
+                else
+                {
                     relativePosition = targetRadius * Vector3.left;
                 }
                 if (relativePosition.Equals(Vector3.zero))

@@ -47,6 +47,7 @@ public class GameMaster : MonoBehaviour
         //StartCoroutine(MissileSpawn());
         //StartCoroutine(MissileDispatch());
         //StartCoroutine(DetectionRoutine());
+        StartCoroutine(GradientRoutine());
         friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, 1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
         friendlyShips[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlyShips[0].GetComponent<ShipScript>().gameMaster = gameObject;
@@ -63,8 +64,90 @@ public class GameMaster : MonoBehaviour
         friendlyShips[3].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlyShips[3].GetComponent<ShipScript>().gameMaster = gameObject;
         friendlyShips[3].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[4].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[4].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[4].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[5].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[5].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[5].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[6].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[6].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[6].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[7].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[7].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[7].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[8].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[8].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[8].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[9].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[9].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[9].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[10].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[10].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[10].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[11].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[11].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[11].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[12].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[12].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[12].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[13].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[13].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[13].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[14].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[14].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[14].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[15].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[15].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[15].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[16].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[16].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[16].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[17].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[17].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[17].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[18].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[18].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[18].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[19].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[19].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[19].GetComponent<ShipScript>().Startup();
         friendlies.Add(friendlyShips[0]);
         friendlies.Add(friendlyShips[1]);
+        friendlies.Add(friendlyShips[2]);
+        friendlies.Add(friendlyShips[3]);
+        friendlies.Add(friendlyShips[4]);
+        friendlies.Add(friendlyShips[5]);
+        friendlies.Add(friendlyShips[6]);
+        friendlies.Add(friendlyShips[7]);
+        friendlies.Add(friendlyShips[8]);
+        friendlies.Add(friendlyShips[9]);
+        friendlies.Add(friendlyShips[10]);
+        friendlies.Add(friendlyShips[11]);
+        friendlies.Add(friendlyShips[12]);
+        friendlies.Add(friendlyShips[13]);
+        friendlies.Add(friendlyShips[14]);
+        friendlies.Add(friendlyShips[15]);
+        friendlies.Add(friendlyShips[16]);
+        friendlies.Add(friendlyShips[17]);
+        friendlies.Add(friendlyShips[18]);
+        friendlies.Add(friendlyShips[19]);
     }
 
     // Update is called once per frame
@@ -346,6 +429,63 @@ public class GameMaster : MonoBehaviour
             }
             i++;
             j++;
+            yield return null;
+        }
+    }
+
+    IEnumerator GradientRoutine()
+    {
+        int i = 0;
+        int j;
+        int k;
+        while (true)
+        {
+            if (friendlyShips.Count == 0)
+            {
+                i = 0;
+                yield return null;
+                continue;
+            }
+            if (i >= friendlyShips.Count)
+            {
+                i = 0;
+            }
+            for (k = i; k < friendlyShips.Count + i; k++)
+            {
+                if (k < friendlyShips.Count)
+                {
+                    if (friendlyShips[k].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation)
+                    {
+                        i = k;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (friendlyShips[k - friendlyShips.Count].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation)
+                    {
+                        i = k - friendlyShips.Count;
+                        break;
+                    }
+                }
+            }
+            if (k == friendlyShips.Count + i)
+            {
+                i = 0;
+                yield return null;
+                continue;
+            }
+            friendlyShips[i].GetComponent<ShipScript>().gradient = Vector3.zero;
+            for (j = 0; j < friendlyShips.Count; j++)
+            {
+                if (i == j || !(friendlyShips[j].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation))
+                    continue;
+                Vector3 radius = friendlyShips[i].transform.position - friendlyShips[j].transform.position;
+                if (radius.Equals(Vector3.zero))
+                    continue;
+                friendlyShips[i].GetComponent<ShipScript>().gradient += Vector3.Normalize(radius) / Vector3.SqrMagnitude(radius);
+            }
+            i++;
             yield return null;
         }
     }
