@@ -36,6 +36,8 @@ public class GameMaster : MonoBehaviour
 
     public List<GameObject> enemyMissiles;
 
+    public GameObject tempFleetCenter;
+
     public bool isPaused = false;
 
     private bool gameOver = false;
@@ -148,6 +150,12 @@ public class GameMaster : MonoBehaviour
         friendlies.Add(friendlyShips[17]);
         friendlies.Add(friendlyShips[18]);
         friendlies.Add(friendlyShips[19]);
+        for(int i = 0; i < friendlyShips.Count; i++)
+        {
+            friendlyShips[i].GetComponent<ShipScript>().targetRadius = 2;
+            friendlyShips[i].GetComponent<ShipScript>().maneuverMode = ShipScript.ManeuverMode.Formation;
+            friendlyShips[i].GetComponent<ShipScript>().referenceBody = tempFleetCenter.GetComponent<Rigidbody>();
+        }
     }
 
     // Update is called once per frame
@@ -483,7 +491,7 @@ public class GameMaster : MonoBehaviour
                 Vector3 radius = friendlyShips[i].transform.position - friendlyShips[j].transform.position;
                 if (radius.Equals(Vector3.zero))
                     continue;
-                friendlyShips[i].GetComponent<ShipScript>().gradient += Vector3.Normalize(radius) / Vector3.SqrMagnitude(radius);
+                friendlyShips[i].GetComponent<ShipScript>().gradient += Mathf.Pow(friendlyShips[i].GetComponent<ShipScript>().targetRadius, 3) * Vector3.Normalize(radius) / Vector3.SqrMagnitude(radius);
             }
             i++;
             yield return null;

@@ -1086,6 +1086,7 @@ MonoBehaviour:
   enemies: []
   enemyShips: []
   enemyMissiles: []
+  tempFleetCenter: {fileID: 56033780}
   isPaused: 0
 --- !u!114 &1912003920
 MonoBehaviour:
