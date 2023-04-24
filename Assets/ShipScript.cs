@@ -46,11 +46,13 @@ public class ShipScript : MonoBehaviour
 
     public float targetRadius; // For Formation mode only
 
+    public Vector3 gradient; // For Formation mode only
+
     public Vector3 targetPosition; // For Rendezvous mode only
 
-    public Rigidbody rb;
+    public Rigidbody rb; // This rigidbody
 
-    public Rigidbody referenceBody;
+    public Rigidbody referenceBody; // Another ship's rigidbody
 
     // Start is called before the first frame update
     void Start()
@@ -76,13 +78,23 @@ public class ShipScript : MonoBehaviour
         marker.transform.position = new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180);
         rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1);
         if (referenceBody == null || referenceBody == rb)
+        {
+            iRSignature = baseIRSignature;
             return;
+        }
         switch (maneuverMode) {
             case ManeuverMode.Rendezvous:
                 relativeVelocity = rb.velocity - referenceBody.velocity;
                 relativePosition = rb.position - referenceBody.position - targetPosition;
-                targetVelocity = -2 * relativePosition / Mathf.Sqrt(2 * Vector3.Magnitude(relativePosition) / (0.95f * thrust / rb.mass));
+                if (relativePosition.Equals(Vector3.zero))
+                    targetVelocity = Vector3.zero;
+                else
+                    targetVelocity = -2 * relativePosition / Mathf.Sqrt(2 * Vector3.Magnitude(relativePosition) / (0.95f * thrust / rb.mass));
+                if (Vector3.SqrMagnitude(targetVelocity) < 0.0001)
+                    targetVelocity = Vector3.zero;
                 velocityChange = targetVelocity - relativeVelocity;
+                if (Vector3.SqrMagnitude(velocityChange) < 0.00000001)
+                    velocityChange = Vector3.zero;
                 if (deltaV * deltaV < Vector3.SqrMagnitude(velocityChange))
                 {
                     rb.AddForce(Vector3.Normalize(velocityChange) * deltaV, ForceMode.VelocityChange);
@@ -91,12 +103,17 @@ public class ShipScript : MonoBehaviour
                 else
                 {
                     rb.AddForce(velocityChange, ForceMode.VelocityChange);
-                    iRSignature = baseIRSignature + (Vector3.Magnitude(velocityChange) / deltaV);
+                    iRSignature = baseIRSignature + (thrust * Vector3.Magnitude(velocityChange) / deltaV);
                 }
                 break;
             case ManeuverMode.Intercept:
                 relativeVelocity = rb.velocity - referenceBody.velocity;
                 relativePosition = rb.position - referenceBody.position; // Target position will always be the center of the target body, so is excluded from this calculation
+                if (relativePosition.Equals(Vector3.zero))
+                {
+                    iRSignature = baseIRSignature;
+                    break;
+                }
                 radialVelocity = Vector3.Dot(relativeVelocity, relativePosition) * relativePosition / Vector3.SqrMagnitude(relativePosition);
                 lateralVelocity = relativeVelocity - radialVelocity;
                 if (deltaV * deltaV < Vector3.SqrMagnitude(lateralVelocity))
@@ -108,14 +125,55 @@ public class ShipScript : MonoBehaviour
                 {
                     velocityChange = (-Vector3.Normalize(relativePosition) * Mathf.Sqrt(deltaV * deltaV - Vector3.SqrMagnitude(lateralVelocity))) - lateralVelocity;
                     rb.AddForce(velocityChange, ForceMode.VelocityChange);
-                    iRSignature = baseIRSignature + (Vector3.Magnitude(velocityChange) / deltaV);
+                    iRSignature = baseIRSignature + (thrust * Vector3.Magnitude(velocityChange) / deltaV);
                 }
                 break;
             case ManeuverMode.Formation:
-                iRSignature = baseIRSignature;
+                relativeVelocity = rb.velocity - referenceBody.velocity;
+                relativePosition = rb.position - referenceBody.position - targetPosition;
+                if (!relativePosition.Equals(Vector3.zero))
+                {
+                    if (!(relativePosition + gradient).Equals(Vector3.zero))
+                        relativePosition = relativePosition - Vector3.Normalize(relativePosition + gradient) * targetRadius;
+                    else
+                        relativePosition = relativePosition - Vector3.Normalize(relativePosition) * targetRadius;
+                } else {
+                    relativePosition = targetRadius * Vector3.left;
+                }
+                if (relativePosition.Equals(Vector3.zero))
+                    targetVelocity = Vector3.zero;
+                else
+                    targetVelocity = -2 * relativePosition / Mathf.Sqrt(2 * Vector3.Magnitude(relativePosition) / (0.95f * thrust / rb.mass));
+                if (Vector3.SqrMagnitude(targetVelocity) < 0.0001)
+                    targetVelocity = Vector3.zero;
+                velocityChange = targetVelocity - relativeVelocity;
+                if (Vector3.SqrMagnitude(velocityChange) < 0.00000001)
+                    velocityChange = Vector3.zero;
+                if (deltaV * deltaV < Vector3.SqrMagnitude(velocityChange))
+                {
+                    rb.AddForce(Vector3.Normalize(velocityChange) * deltaV, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + thrust;
+                }
+                else
+                {
+                    rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + (thrust * Vector3.Magnitude(velocityChange) / deltaV);
+                }
                 break;
             case ManeuverMode.Hold:
-                iRSignature = baseIRSignature;
+                velocityChange = referenceBody.velocity - rb.velocity;
+                if (Vector3.SqrMagnitude(velocityChange) < 0.00000001)
+                    velocityChange = Vector3.zero;
+                if (deltaV * deltaV < Vector3.SqrMagnitude(velocityChange))
+                {
+                    rb.AddForce(Vector3.Normalize(velocityChange) * deltaV, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + thrust;
+                }
+                else
+                {
+                    rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                    iRSignature = baseIRSignature + (thrust * Vector3.Magnitude(velocityChange) / deltaV);
+                }
                 break;
             case ManeuverMode.Idle:
                 iRSignature = baseIRSignature;

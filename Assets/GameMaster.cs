@@ -43,18 +43,26 @@ public class GameMaster : MonoBehaviour
     void Start()
     {
         Random.InitState(1776);
-        StartCoroutine(SpawnEnemies());
-        StartCoroutine(MissileSpawn());
-        StartCoroutine(MissileDispatch());
-        StartCoroutine(DetectionRoutine());
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, -1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        //StartCoroutine(SpawnEnemies());
+        //StartCoroutine(MissileSpawn());
+        //StartCoroutine(MissileDispatch());
+        //StartCoroutine(DetectionRoutine());
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, 1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
         friendlyShips[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlyShips[0].GetComponent<ShipScript>().gameMaster = gameObject;
         friendlyShips[0].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, 1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, -1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
         friendlyShips[1].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
         friendlyShips[1].GetComponent<ShipScript>().gameMaster = gameObject;
         friendlyShips[1].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(-1, 1, 0), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[2].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[2].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[2].GetComponent<ShipScript>().Startup();
+        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(-1, -1, 0), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
+        friendlyShips[3].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
+        friendlyShips[3].GetComponent<ShipScript>().gameMaster = gameObject;
+        friendlyShips[3].GetComponent<ShipScript>().Startup();
         friendlies.Add(friendlyShips[0]);
         friendlies.Add(friendlyShips[1]);
     }
