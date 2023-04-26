@@ -45,10 +45,10 @@ public class GameMaster : MonoBehaviour
     void Start()
     {
         Random.InitState(1776);
-        //StartCoroutine(SpawnEnemies());
-        //StartCoroutine(MissileSpawn());
-        //StartCoroutine(MissileDispatch());
-        //StartCoroutine(DetectionRoutine());
+        StartCoroutine(SpawnEnemies());
+        StartCoroutine(MissileSpawn());
+        StartCoroutine(MissileDispatch());
+        StartCoroutine(DetectionRoutine());
         StartCoroutine(GradientRoutine());
         friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, 1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
         friendlyShips[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
@@ -483,7 +483,7 @@ public class GameMaster : MonoBehaviour
                 yield return null;
                 continue;
             }
-            friendlyShips[i].GetComponent<ShipScript>().gradient = Vector3.zero;
+            friendlyShips[i].GetComponent<ShipScript>().gradient = Vector3.zero + new Vector3(10, 0, 0);
             for (j = 0; j < friendlyShips.Count; j++)
             {
                 if (i == j || !(friendlyShips[j].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation))
