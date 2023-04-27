@@ -14,6 +14,24 @@ public class AudioVolumeOptions : MonoBehaviour
 
     public Slider sfxVolume;
 
+    private void Start()
+    {
+        if (PlayerPrefs.GetInt("First Play") == 0)
+        {
+            PlayerPrefs.SetInt("First Play", 1);
+            PlayerPrefs.SetFloat("MasterVolume", 0.5f);
+            PlayerPrefs.SetFloat("MusicVolume", 0.5f);
+            PlayerPrefs.SetFloat("SFXVolume", 0.5f);
+        }
+
+        masterVolume.value = PlayerPrefs.GetFloat("MasterVolume");
+        musicVolume.value = PlayerPrefs.GetFloat("MusicVolume");
+        sfxVolume.value = PlayerPrefs.GetFloat("SFXVolume");
+        SetMasterVolume();
+        SetMusicVolume();
+        SetSFXVolume();
+    }
+
     public void SetMasterVolume()
     {
         SetVolume("MasterVolume", masterVolume.value);
@@ -37,5 +55,6 @@ public class AudioVolumeOptions : MonoBehaviour
         else
             volume = Mathf.Log10(value) * 20;
         audioMixer.SetFloat(name, volume);
+        PlayerPrefs.SetFloat(name, value);
     }
 }
