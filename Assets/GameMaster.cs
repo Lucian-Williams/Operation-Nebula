@@ -38,6 +38,8 @@ public class GameMaster : MonoBehaviour
 
     public GameObject tempFleetCenter;
 
+    public AudioSource alarmSource;
+
     public bool isPaused = false;
 
     private bool gameOver = false;
@@ -162,7 +164,10 @@ public class GameMaster : MonoBehaviour
     void Update()
     {
         if (isPaused)
+        {
+            alarmSource.enabled = false;
             return;
+        }
         if (friendlyShips.Count == 0 && !gameOver)
             gameOver = true;
         if (gameOver)
@@ -185,6 +190,16 @@ public class GameMaster : MonoBehaviour
         {
             targetSprite.SetActive(false);
         }
+        bool setAlarm = false;
+        for(int i = 0; i < enemyMissiles.Count; i++)
+        {
+            if (enemyMissiles[i].GetComponent<ShipScript>().detected && Vector3.SqrMagnitude(enemyMissiles[i].transform.position) < 2500)
+            {
+                setAlarm = true;
+                break;
+            }
+        }
+        alarmSource.enabled = setAlarm;
     }
 
     public void DispatchMissile()
