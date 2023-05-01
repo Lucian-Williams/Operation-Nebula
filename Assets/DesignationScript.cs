@@ -23,7 +23,7 @@ public class DesignationScript : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (gameMaster.GetComponent<GameMaster>().isPaused)
+        if (!gameMaster.activeInHierarchy)
             return;
         gameMaster.GetComponent<GameMaster>().target = creator;
     }

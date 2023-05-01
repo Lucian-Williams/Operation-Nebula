@@ -6,178 +6,66 @@ public class GameMaster : MonoBehaviour
 {
     public GameObject friendlyPrefab;
 
-    public GameObject friendlyOrganizer;
-
     public GameObject friendlyMissilePrefab;
-
-    public GameObject friendlyMissileOrganizer;
 
     public GameObject enemyPrefab;
 
-    public GameObject enemyOrganizer;
-
     public GameObject enemyMissilePrefab;
-
-    public GameObject enemyMissileOrganizer;
 
     public GameObject target;
 
     public GameObject targetSprite;
 
-    public List<GameObject> friendlies;
-
-    public List<GameObject> friendlyShips;
-
-    public List<GameObject> friendlyMissiles;
-
-    public List<GameObject> enemies;
-
-    public List<GameObject> enemyShips;
-
-    public List<GameObject> enemyMissiles;
-
-    public GameObject tempFleetCenter;
+    public Rigidbody fleetCenter;
 
     public AudioSource alarmSource;
 
-    public bool isPaused = false;
+    bool isPaused = false;
 
-    private bool gameOver = false;
+    List<List<GameObject>> taskForces;
+
+    List<List<GameObject>> friendlyTaskForces;
+
+    List<List<GameObject>> enemyTaskForces;
+
+    bool gameOver = false;
     // Start is called before the first frame update
     void Start()
     {
         Random.InitState(1776);
+        taskForces = new List<List<GameObject>>();
+        friendlyTaskForces = new List<List<GameObject>>();
+        enemyTaskForces = new List<List<GameObject>>();
         StartCoroutine(SpawnEnemies());
-        StartCoroutine(MissileSpawn());
-        StartCoroutine(MissileDispatch());
+        StartCoroutine(TargetSelection());
         StartCoroutine(DetectionRoutine());
         StartCoroutine(GradientRoutine());
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, 1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[0].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[0].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[0].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(1, 0, -1), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[1].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[1].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[1].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(-1, 1, 0), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[2].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[2].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[2].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(-1, -1, 0), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[3].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[3].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[3].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[4].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[4].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[4].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[5].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[5].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[5].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[6].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[6].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[6].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[7].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[7].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[7].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[8].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[8].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[8].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[9].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[9].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[9].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[10].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[10].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[10].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[11].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[11].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[11].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[12].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[12].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[12].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[13].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[13].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[13].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[14].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[14].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[14].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[15].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[15].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[15].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[16].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[16].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[16].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[17].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[17].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[17].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[18].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[18].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[18].GetComponent<ShipScript>().Startup();
-        friendlyShips.Add(Instantiate(friendlyPrefab, new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-1f, 1f)), Quaternion.identity, friendlyOrganizer.GetComponent<Transform>()));
-        friendlyShips[19].GetComponent<Rigidbody>().velocity = new Vector3(0, 0, 0);
-        friendlyShips[19].GetComponent<ShipScript>().gameMaster = gameObject;
-        friendlyShips[19].GetComponent<ShipScript>().Startup();
-        friendlies.Add(friendlyShips[0]);
-        friendlies.Add(friendlyShips[1]);
-        friendlies.Add(friendlyShips[2]);
-        friendlies.Add(friendlyShips[3]);
-        friendlies.Add(friendlyShips[4]);
-        friendlies.Add(friendlyShips[5]);
-        friendlies.Add(friendlyShips[6]);
-        friendlies.Add(friendlyShips[7]);
-        friendlies.Add(friendlyShips[8]);
-        friendlies.Add(friendlyShips[9]);
-        friendlies.Add(friendlyShips[10]);
-        friendlies.Add(friendlyShips[11]);
-        friendlies.Add(friendlyShips[12]);
-        friendlies.Add(friendlyShips[13]);
-        friendlies.Add(friendlyShips[14]);
-        friendlies.Add(friendlyShips[15]);
-        friendlies.Add(friendlyShips[16]);
-        friendlies.Add(friendlyShips[17]);
-        friendlies.Add(friendlyShips[18]);
-        friendlies.Add(friendlyShips[19]);
-        for(int i = 0; i < friendlyShips.Count; i++)
-        {
-            friendlyShips[i].GetComponent<ShipScript>().targetRadius = 2;
-            friendlyShips[i].GetComponent<ShipScript>().maneuverMode = ShipScript.ManeuverMode.Formation;
-            friendlyShips[i].GetComponent<ShipScript>().referenceBody = tempFleetCenter.GetComponent<Rigidbody>();
-        }
+        SpawnFriendlies();
     }
 
     // Update is called once per frame
     void Update()
     {
+        // Deprecte isPaused, it's a dumb field to have anyways
         if (isPaused)
         {
             alarmSource.enabled = false;
             return;
         }
-        if (friendlyShips.Count == 0 && !gameOver)
-            gameOver = true;
+        // XXX Change GameOver condition -- STOP REFERRING TO FRIENDLYSHIPS
+        //if (friendlyShips.Count == 0 && !gameOver)
+        //gameOver = true;
+        // Setting the game master inactive will stop all children of the gamemaster, including their coroutines, preferable to changing the timescale
+        // Deprecate, using timeScale to stop the game is inferior to simply deactivating the GameMaster and all its children
         if (gameOver)
         {
             Time.timeScale = 0;
             return;
         }
-        if (target && (!target.TryGetComponent<ShipScript>(out ShipScript non) || !non.detected))
+        if (target && (!target.TryGetComponent<ShipScript>(out ShipScript ship) || !ship.detected)) // This is good for now
             target = null;
         CleanShips();
+        // Start Graphical update to target marker position
         if (target)
         {
             targetSprite.transform.position = target.GetComponent<ShipScript>().marker.transform.position;
@@ -190,19 +78,28 @@ public class GameMaster : MonoBehaviour
         {
             targetSprite.SetActive(false);
         }
+        // End Graphical update to target marker position
+        // Start checks to activate or deactivate the missile warning (alarm)
         bool setAlarm = false;
-        for(int i = 0; i < enemyMissiles.Count; i++)
+        for (int i = 0; i < enemyTaskForces.Count; i++)
         {
-            if (enemyMissiles[i].GetComponent<ShipScript>().detected && Vector3.SqrMagnitude(enemyMissiles[i].transform.position) < 2500)
+            for (int j = 0; j < enemyTaskForces[i].Count; j++)
             {
-                setAlarm = true;
-                break;
+                ShipScript enemyShip = enemyTaskForces[i][j].GetComponent<ShipScript>();
+                if (enemyShip.detected && enemyShip.shipClass == ShipScript.ShipClass.Missile && Vector3.SqrMagnitude(enemyShip.transform.position) < 2500)
+                {
+                    setAlarm = true;
+                    break;
+                }
             }
+            if (setAlarm)
+                break;
         }
         alarmSource.enabled = setAlarm;
+        // End checks to activate or deactivate the missile warning (alarm)
     }
-
-    public void DispatchMissile()
+    /*
+    public void DispatchMissile() // Deprecate, ships will use their rules of engagement to select targets
     {
         if (!target)
             return;
@@ -215,95 +112,119 @@ public class GameMaster : MonoBehaviour
                 return;
             }
         }
-    }
+    }*/
 
+    // Removes destroyed ships from task forces, necessary so that ships don't try to interact with destroyed ships
     void CleanShips()
     {
-        for (int i = 0; i < friendlies.Count; i++)
+        for (int i = 0; i < taskForces.Count; i++) // Loop through all task forces
         {
-            if (!friendlies[i].TryGetComponent<ShipScript>(out ShipScript non))
+            for (int j = 0; j < taskForces[i].Count; j++) // Loop through all ships in the task force
             {
-                friendlies.RemoveAt(i);
-                i--;
-            }
-        }
-        for (int i = 0; i < friendlyShips.Count; i++)
-        {
-            if (!friendlyShips[i].TryGetComponent<ShipScript>(out ShipScript non))
-            {
-                friendlyShips.RemoveAt(i);
-                i--;
-            }
-        }
-        for (int i = 0; i < friendlyMissiles.Count; i++)
-        {
-            if (!friendlyMissiles[i].TryGetComponent<ShipScript>(out ShipScript non))
-            {
-                friendlyMissiles.RemoveAt(i);
-                i--;
-            }
-        }
-        for (int i = 0; i < enemies.Count; i++)
-        {
-            if (!enemies[i].TryGetComponent<ShipScript>(out ShipScript non))
-            {
-                enemies.RemoveAt(i);
-                i--;
-            }
-        }
-        for (int i = 0; i < enemyShips.Count; i++)
-        {
-            if (!enemyShips[i].TryGetComponent<ShipScript>(out ShipScript non))
-            {
-                enemyShips.RemoveAt(i);
-                i--;
-            }
-        }
-        for (int i = 0; i < enemyMissiles.Count; i++)
-        {
-            if (!enemyMissiles[i].TryGetComponent<ShipScript>(out ShipScript non))
-            {
-                enemyMissiles.RemoveAt(i);
-                i--;
+                if (!taskForces[i][j].TryGetComponent<ShipScript>(out ShipScript ship)) // If the ship no longer has a ShipScript (meaning it was destroyed), remove from the task force
+                {
+                    taskForces[i].RemoveAt(j);
+                    j--; // Since removal moves the tail of the list up, decrement the index for the next ship in the task force
+                }
             }
         }
     }
 
-    void RandomSpawn(GameObject spawnPrefab, GameObject spawnOrganizer, List<GameObject> spawnList, List<GameObject> collectiveList, Vector3 location, Vector3 velocity, float radius, int count)
+    // Fix
+    List<GameObject> RandomSpawn(GameObject spawnPrefab, ShipDesign shipDesign, Vector3 location, Vector3 velocity, float radius, int count)
     {
+        List<GameObject> taskForce = new List<GameObject>();
         for (int i = 0; i < count; i++)
         {
             GameObject temp = Instantiate(
                 spawnPrefab,
                 location + new Vector3(Random.Range(-radius, radius), Random.Range(-radius, radius), Random.Range(-radius, radius)),
                 Quaternion.identity,
-                spawnOrganizer.GetComponent<Transform>()
+                transform
                 );
+            temp.GetComponent<ShipScript>().UseDesign(shipDesign);
             temp.GetComponent<Rigidbody>().velocity = velocity + new Vector3(Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f), Random.Range(-0.1f, 0.1f));
             temp.GetComponent<ShipScript>().gameMaster = gameObject;
             temp.GetComponent<ShipScript>().Startup();
-            spawnList.Add(temp);
-            collectiveList.Add(temp);
+            taskForce.Add(temp);
         }
+        return taskForce;
     }
 
-    IEnumerator SpawnEnemies()
+    // Sets the task force to form up on the given rigidbody with the given radius of the formation
+    void SetFormation(List<GameObject> taskForce, float targetRadius, Rigidbody referenceBody)
     {
-        while (true)
+        for (int i = 0; i < taskForce.Count; i++)
         {
-            Vector3 direction = Random.onUnitSphere;
-            Vector3 spawnLocation = direction * Random.Range(100, 200);
-            Vector3 spawnVelocity = -direction * Random.Range(1, 2);
-            // Spawm between 2-10 targets
-            RandomSpawn(enemyPrefab, enemyOrganizer, enemyShips, enemies, spawnLocation, spawnVelocity, 10, Random.Range(2, 11));
-            // Spawn between 1-4 missiles
-            RandomSpawn(enemyMissilePrefab, enemyMissileOrganizer, enemyMissiles, enemies, spawnLocation, spawnVelocity, 10, Random.Range(1, 5));
-            // Yield return new waitforseconds 20-35 seconds
-            yield return new WaitForSeconds(Random.Range(20, 35));
+            ShipScript ship = taskForce[i].GetComponent<ShipScript>();
+            if (ship.maneuverMode == ShipScript.ManeuverMode.Intercept)
+                continue;
+            if (taskForce[i].GetComponent<Rigidbody>() != referenceBody)
+            {
+                ship.maneuverMode = ShipScript.ManeuverMode.Formation;
+                ship.targetRadius = targetRadius;
+                ship.referenceBody = referenceBody;
+                ship.targetPosition = Vector3.zero; // Not necessary if targetposition is deprecated
+            }
+            else
+                ship.maneuverMode = ShipScript.ManeuverMode.Idle;
         }
     }
 
-    IEnumerator MissileSpawn()
+    // Sets the rules of engagment of the task force, which will only engage within a certain range and only ships of a minimum size estimated by RCS
+    void SetROE(List<GameObject> taskForce, float maxRange, float minRCS)
+    {
+        for (int i = 0; i < taskForce.Count; i++)
+        {
+            ShipScript ship = taskForce[i].GetComponent<ShipScript>();
+            ship.maxRange = maxRange;
+            ship.minRCS = minRCS;
+        }
+    }
+
+    // Sets the radar sets of the task force to val, could be false to achieve stealth
+    void SetRadarActive(List<GameObject> taskForce, bool val)
+    {
+        for (int i = 0; i < taskForce.Count; i++)
+        {
+            if (taskForce[i].GetComponent<ShipScript>().hasActiveRadar)
+                taskForce[i].GetComponent<ShipScript>().radarIsOn = val;
+        }
+    }
+
+    void SpawnFriendlies()
+    {
+        ShipDesign shipDesign = new ShipDesign(true, true, true, 10, 100, 10000, 0.1f, 2500, 1000);
+        List<GameObject> taskForce = RandomSpawn(friendlyPrefab, shipDesign, Vector3.zero, Vector3.zero, 50, 20);
+        SetFormation(taskForce, 50, fleetCenter);
+        taskForces.Add(taskForce);
+        friendlyTaskForces.Add(taskForce);
+    }
+
+    IEnumerator SpawnEnemies() // XXX Complete
+    {
+        // Spawn loose formation of enemy scouts, Idle, they should try to loiter on the outskirts of the friendly fleet once they spot it (set formation on one of the friendly ships)
+        Vector3 direction = Random.onUnitSphere;
+        Vector3 spawnLocation = direction * Random.Range(450f, 500f);
+        Vector3 spawnVelocity = -direction * Random.Range(1f, 2f);
+        ShipDesign shipDesign = new ShipDesign(true, true, true, 1, 100, 1000, 0.1f, 2500, 100);
+        List<GameObject> taskForce = RandomSpawn(enemyPrefab, shipDesign, spawnLocation, spawnVelocity, 100, Random.Range(6, 10));
+        taskForces.Add(taskForce);
+        enemyTaskForces.Add(taskForce);
+        while (true)
+            yield return new WaitForSeconds(60);
+
+        // Wait for 20 seconds
+        // Spawn loose formation of enemy missiles, they should have aggressive ROE with Idle maneuvering
+        // Simultaneous spawn of more scouts, they should immediately set formation on the world origin
+        // Simultaneous spawn of stealth missiles, they should be Idle with only IR sensors and small RCS, they should have cautious ROE so they can close the distance and penetrate the screen
+        // Wait for 30 seconds
+        // Spawn large fleet consisting of a screen in formation around the center of the fleet, laser capital ships in the middle, missile interceptors, and offensive missiles
+        // Win condition is the player destroying all enemy offensive capabilities or all enemy offensive ships drifting over 500 km away
+        // Loss condition is the player losing all offensive capabilities
+    }
+    /*
+    IEnumerator MissileSpawn() // XXX Deprecate
     {
         while (true)
         {
@@ -312,7 +233,7 @@ public class GameMaster : MonoBehaviour
         }
     }
 
-    IEnumerator MissileDispatch()
+    IEnumerator MissileDispatch() // XXX Deprecate
     {
         int i = 0;
         while (true)
@@ -335,180 +256,131 @@ public class GameMaster : MonoBehaviour
             yield return new WaitForSeconds(2);
             i++;
         }
-    }
+    }*/
 
-    IEnumerator DetectionRoutine()
+    IEnumerator DetectionRoutine() // Computes the detection status for one ship per task force per frame to improve performance
     {
-        int i = 0;
-        int j = 0;
+        int i = 0; // With modulation, i will select the ship for this frame for each task force
         while (true)
         {
-            if (i >= enemies.Count)
+            for (int j = 0; j < friendlyTaskForces.Count; j++) // Loop through each friendly task force, enemies will attempt detection on one friendly ship per friendly task force per frame
+            {
+                if (friendlyTaskForces[j].Count == 0) // Can't detect or track empty task forces
+                    continue;
+                ShipScript friendlyShip = friendlyTaskForces[j][i % friendlyTaskForces[j].Count].GetComponent<ShipScript>(); // The ship to attempt detection and tracking on
+
+                //Initially assume the ship is neither tracked nor detected
+                bool detected = false;
+                bool tracked = false;
+                for (int k = 0; k < enemyTaskForces.Count; k++) // Loop through each enemy task force so each task force can attempt to detect the friendly ship
+                {
+                    for (int n = 0; n < enemyTaskForces[k].Count; n++) // Loop through each ship in the enemy task force
+                    {
+                        ShipScript enemyShip = enemyTaskForces[k][n].GetComponent<ShipScript>(); // Select the enemy ship
+                        (detected, tracked) = enemyShip.Detect(friendlyShip); // Attempt to detect the friendly ship with the enemy ship
+                        if (tracked)
+                            break;
+                    }
+                    if (tracked)
+                        break;
+                }
+                // Set the tracked and detected fields of the friendly ship
+                friendlyShip.tracked = tracked;
+                friendlyShip.detected = detected;
+            }
+            for (int j = 0; j < enemyTaskForces.Count; j++) // Loop through each enemy task force, friendlies will attempt detection on one enemy ship per enemy task force per frame
+            {
+                if (enemyTaskForces[j].Count == 0) // Can't detect or track empty task forces
+                    continue;
+                ShipScript enemyShip = enemyTaskForces[j][i % enemyTaskForces[j].Count].GetComponent<ShipScript>(); // The ship to attempt detection and tracking on
+
+                //Initially assume the ship is neither tracked nor detected
+                bool detected = false;
+                bool tracked = false;
+                for (int k = 0; k < friendlyTaskForces.Count; k++) // Loop through each friendly task force so each task force can attempt to detect the enemy ship
+                {
+                    for (int n = 0; n < friendlyTaskForces[k].Count; n++) // Loop through each ship in the friendly task force
+                    {
+                        ShipScript friendlyShip = friendlyTaskForces[k][n].GetComponent<ShipScript>(); // Select the friendly ship
+                        (detected, tracked) = friendlyShip.Detect(enemyShip); // Attempt to detect the enemy ship with the friendly ship
+                        if (tracked)
+                            break;
+                    }
+                    if (tracked)
+                        break;
+                }
+                // Using the special methods of the ShipScript also affects how they are displayed on the player's radar screen, hence the difference here
+                if (tracked)
+                    enemyShip.setTracked();
+                else if (detected)
+                    enemyShip.setDetected();
+                else
+                    enemyShip.setUndetected();
+            }
+            if (i == int.MaxValue) // Don't let i overflow
                 i = 0;
-            if (j >= friendlies.Count)
-                j = 0;
-            if (i < enemies.Count) // attempt to detect/track one enemy per loop
-            {
-                int num;
-                bool detected = false;
-                bool tracked = false;
-                for (num = 0; num < friendlies.Count; num++)
-                {
-                    if (friendlies[num].GetComponent<ShipScript>().hasRadar)
-                    {
-                        float radarPower = friendlies[num].GetComponent<ShipScript>().radarPower;
-                        float radarReturn = 0;
-                        float rcs = enemies[i].GetComponent<ShipScript>().radarCrossSection;
-                        if (friendlies[num].GetComponent<ShipScript>().radarIsOn)
-                            radarReturn += radarPower * rcs / Mathf.Pow(Vector3.SqrMagnitude(friendlies[num].transform.position - enemies[i].transform.position), 2);
-                        float radarSignal = radarReturn;
-                        if (enemies[i].GetComponent<ShipScript>().radarIsOn)
-                            radarSignal += enemies[i].GetComponent<ShipScript>().radarPower / Vector3.SqrMagnitude(friendlies[num].transform.position - enemies[i].transform.position);
-                        if (radarReturn * radarPower > 16) // If the radar gets a strong return with its own waves, tracking is achieved
-                        {
-                            detected = true;
-                            tracked = true;
-                            break;
-                        }
-                        if (radarSignal * radarPower > 1) // IF the radar gets a weak combined radar signal, only detection is achieved
-                            detected = true;
-                    }
-                    if (friendlies[num].GetComponent<ShipScript>().hasIR)
-                    {
-                        float iRSignal = enemies[i].GetComponent<ShipScript>().iRSignature / Vector3.SqrMagnitude(friendlies[num].transform.position - enemies[i].transform.position);
-                        if (iRSignal * friendlies[num].GetComponent<ShipScript>().iRSensitivity > 1) // Determine if detection/tracking has been achieved
-                        {
-                            detected = true;
-                            tracked = true;
-                            break;
-                        }
-                    }
-                }
-                if (tracked)
-                {
-                    enemies[i].GetComponent<ShipScript>().setTracked();
-                }
-                else if (detected)
-                {
-                    enemies[i].GetComponent<ShipScript>().setDetected();
-                }
-                else
-                {
-                    enemies[i].GetComponent<ShipScript>().setUndetected();
-                }
-            }
-            if (j < friendlies.Count) // attempt to detect/track one friendly per loop
-            {
-                int num;
-                bool detected = false;
-                bool tracked = false;
-                for (num = 0; num < enemies.Count; num++)
-                {
-                    if (enemies[num].GetComponent<ShipScript>().hasRadar)
-                    {
-                        float radarPower = enemies[num].GetComponent<ShipScript>().radarPower;
-                        float radarReturn = 0;
-                        float rcs = friendlies[j].GetComponent<ShipScript>().radarCrossSection;
-                        if (enemies[num].GetComponent<ShipScript>().radarIsOn)
-                            radarReturn += radarPower * rcs / Mathf.Pow(Vector3.SqrMagnitude(enemies[num].transform.position - friendlies[j].transform.position), 2);
-                        float radarSignal = radarReturn;
-                        if (friendlies[j].GetComponent<ShipScript>().radarIsOn)
-                            radarSignal += friendlies[j].GetComponent<ShipScript>().radarPower / Vector3.SqrMagnitude(enemies[num].transform.position - friendlies[j].transform.position);
-                        if (radarReturn * radarPower > 16) // If the radar gets a strong return with its own waves, tracking is achieved
-                        {
-                            detected = true;
-                            tracked = true;
-                            break;
-                        }
-                        if (radarSignal * radarPower > 1) // IF the radar gets a weak combined radar signal, only detection is achieved
-                            detected = true;
-                    }
-                    if (enemies[num].GetComponent<ShipScript>().hasIR)
-                    {
-                        float iRSignal = friendlies[j].GetComponent<ShipScript>().iRSignature / Vector3.SqrMagnitude(enemies[num].transform.position - friendlies[j].transform.position);
-                        if (iRSignal * enemies[num].GetComponent<ShipScript>().iRSensitivity > 1) // Determine if detection/tracking has been achieved
-                        {
-                            detected = true;
-                            tracked = true;
-                            break;
-                        }
-                    }
-                }
-                if (tracked)
-                {
-                    friendlies[j].GetComponent<ShipScript>().tracked = true;
-                    friendlies[j].GetComponent<ShipScript>().detected = true;
-                }
-                else if (detected)
-                {
-                    friendlies[j].GetComponent<ShipScript>().tracked = false;
-                    friendlies[j].GetComponent<ShipScript>().detected = true;
-                }
-                else
-                {
-                    friendlies[j].GetComponent<ShipScript>().tracked = false;
-                    friendlies[j].GetComponent<ShipScript>().detected = false;
-                }
-            }
-            i++;
-            j++;
+            else
+                i++;  // Increment the selector for the next frame
             yield return null;
         }
     }
 
-    IEnumerator GradientRoutine()
+    IEnumerator GradientRoutine() // Computes the formation gradient for one ship per task force per frame to improve performance
     {
-        int i = 0;
-        int j;
-        int k;
+        int i = 0; // With modulation, i will select the ship for this frame for each task force
         while (true)
         {
-            if (friendlyShips.Count == 0)
+            for (int j = 0; j < taskForces.Count; j++) // Loop through each task force
             {
-                i = 0;
-                yield return null;
-                continue;
-            }
-            if (i >= friendlyShips.Count)
-            {
-                i = 0;
-            }
-            for (k = i; k < friendlyShips.Count + i; k++)
-            {
-                if (k < friendlyShips.Count)
+                if (taskForces[j].Count == 0) // Can't compute gradients for empty task forces
+                    continue;
+                ShipScript ship = taskForces[j][i % taskForces[j].Count].GetComponent<ShipScript>(); // The ship to compute the gradient for
+                ship.gradient = Vector3.zero; // Zero out the old gradient calculation
+                if (ship.maneuverMode == ShipScript.ManeuverMode.Formation) // Only compute a non zero gradient if the ship is in formation
                 {
-                    if (friendlyShips[k].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation)
+                    for (int k = 0; k < taskForces[j].Count; k++) // Compute the gradient from every other ship in the task force
                     {
-                        i = k;
-                        break;
-                    }
-                }
-                else
-                {
-                    if (friendlyShips[k - friendlyShips.Count].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation)
-                    {
-                        i = k - friendlyShips.Count;
-                        break;
+                        ShipScript otherShip = taskForces[j][k].GetComponent<ShipScript>();
+                        if (i % taskForces[j].Count == k || otherShip.maneuverMode != ShipScript.ManeuverMode.Formation) // The other ship must not be this ship and must be in formation
+                            continue;
+                        Vector3 radius = ship.transform.position - otherShip.transform.position;
+                        if (radius.Equals(Vector3.zero)) // If the ships are in the exact same position, we can't compute the gradient, so just leave it
+                            continue;
+                        ship.gradient += Mathf.Pow(ship.targetRadius, 3) * Vector3.Normalize(radius) / Vector3.SqrMagnitude(radius); //Use the direction and distance between the ships to compute gradient
                     }
                 }
             }
-            if (k == friendlyShips.Count + i)
-            {
+            if (i == int.MaxValue) // Don't let i overflow
                 i = 0;
-                yield return null;
-                continue;
-            }
-            friendlyShips[i].GetComponent<ShipScript>().gradient = Vector3.zero + new Vector3(10, 0, 0);
-            for (j = 0; j < friendlyShips.Count; j++)
+            else
+                i++; // Increment the selector for the next frame
+            yield return null;
+        }
+    }
+
+    IEnumerator TargetSelection() // Sets one ship per task force per frame to attempt to select a target
+    {
+        int i = 0; // With modulation, i will select the ship for this frame for each task force
+        while (true)
+        {
+            for (int j = 0; j < friendlyTaskForces.Count; j++) // Loop through each friendly task force, one friendly ship per friendly task force will attempt to find a target each frame
             {
-                if (i == j || !(friendlyShips[j].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Formation))
+                if (friendlyTaskForces[j].Count == 0) // Task force must have at least one ship to assign a target
                     continue;
-                Vector3 radius = friendlyShips[i].transform.position - friendlyShips[j].transform.position;
-                if (radius.Equals(Vector3.zero))
-                    continue;
-                friendlyShips[i].GetComponent<ShipScript>().gradient += Mathf.Pow(friendlyShips[i].GetComponent<ShipScript>().targetRadius, 3) * Vector3.Normalize(radius) / Vector3.SqrMagnitude(radius);
+                ShipScript friendlyShip = friendlyTaskForces[j][i % friendlyTaskForces[j].Count].GetComponent<ShipScript>(); // The ship that will attempt target selection
+                friendlyShip.TrySelectTarget(enemyTaskForces); // Try to select a target
             }
-            i++;
+            for (int j = 0; j < enemyTaskForces.Count; j++) // Loop through each enemy task force, one enemy ship per enemy task force will attempt to find a target each frame
+            {
+                if (enemyTaskForces[j].Count == 0) // Task force must have at least one ship to assign a target
+                    continue;
+                ShipScript enemyShip = enemyTaskForces[j][i % enemyTaskForces[j].Count].GetComponent<ShipScript>(); // The ship that will attempt target selection
+                enemyShip.TrySelectTarget(friendlyTaskForces); // Try to select a target
+            }
+            if (i == int.MaxValue) // Don't let i overflow
+                i = 0;
+            else
+                i++; // Increment the selector for the next frame
             yield return null;
         }
     }
