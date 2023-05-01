@@ -12,6 +12,12 @@ public class ShipScript : MonoBehaviour
 
     public ManeuverMode maneuverMode;
 
+    public Sprite smallSprite;
+
+    public Sprite mediumSprite;
+
+    public Sprite largeSprite;
+
     public GameObject markerPrefab;
 
     public GameObject marker;
@@ -307,6 +313,12 @@ public class ShipScript : MonoBehaviour
         float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
         float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
         marker = Instantiate(markerPrefab, new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180), Quaternion.identity);
+        if (radarCrossSection < 10)
+            marker.GetComponent<SpriteRenderer>().sprite = smallSprite;
+        else if (radarCrossSection < 1000)
+            marker.GetComponent<SpriteRenderer>().sprite = mediumSprite;
+        else
+            marker.GetComponent<SpriteRenderer>().sprite = largeSprite;
         if (marker.TryGetComponent<DesignationScript>(out DesignationScript temp))
         {
             temp.creator = gameObject;

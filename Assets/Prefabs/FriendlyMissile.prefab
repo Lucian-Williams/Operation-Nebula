@@ -77,7 +77,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   shipClass: 0
   maneuverMode: 0
-  markerPrefab: {fileID: 9098818575809601122, guid: 7e96e874f3fc62542911426074c844ff, type: 3}
+  smallSprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
+  mediumSprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
+  largeSprite: {fileID: 2747690628134850419, guid: 16037dbd798344f57a526d53d48f5ead, type: 3}
+  markerPrefab: {fileID: 9098818575809601122, guid: ef750fe4448bd3541b4245ba0fb663e5, type: 3}
   marker: {fileID: 0}
   rangeMarkerPrefab: {fileID: 8168372205358329051, guid: 9e9414436d5bad1438e154b667800e64, type: 3}
   rangeMarker: {fileID: 0}
@@ -85,6 +88,7 @@ MonoBehaviour:
   detected: 0
   tracked: 0
   hasRadar: 1
+  hasActiveRadar: 0
   radarIsOn: 0
   hasIR: 0
   thrust: 0.2
@@ -93,7 +97,11 @@ MonoBehaviour:
   baseIRSignature: 0.05
   iRSignature: 0
   iRSensitivity: 0
+  maxRange: 0
+  minRCS: 0
   targetRadius: 0
+  missilesTargeting: 0
+  gradient: {x: 0, y: 0, z: 0}
   targetPosition: {x: 0, y: 0, z: 0}
   rb: {fileID: 6599322556197208828}
   referenceBody: {fileID: 0}
