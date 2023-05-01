@@ -94,7 +94,7 @@ public class ShipScript : MonoBehaviour
         Vector3 velocityChange;
         Vector3 radialVelocity;
         Vector3 lateralVelocity;
-        marker.transform.position = new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180); // Update the position of the radar marker on screen
+        marker.transform.position = new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180 + 1); // Update the position of the radar marker on screen
         rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1); // Update the range marker for the new range
         if (referenceBody == null || referenceBody == rb)
             return;
@@ -312,7 +312,7 @@ public class ShipScript : MonoBehaviour
         float sqrDist = Vector3.SqrMagnitude(transform.position);
         float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
         float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
-        marker = Instantiate(markerPrefab, new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180), Quaternion.identity);
+        marker = Instantiate(markerPrefab, new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180 + 1), Quaternion.identity);
         if (radarCrossSection < 10)
             marker.GetComponent<SpriteRenderer>().sprite = smallSprite;
         else if (radarCrossSection < 1000)
