@@ -22,15 +22,15 @@ public class ShipScript : MonoBehaviour
 
     public GameObject gameMaster;
 
-    public bool detected = false;
+    public bool detected;
 
-    public bool tracked = false;
+    public bool tracked;
 
     public bool hasRadar;
 
     public bool hasActiveRadar;
 
-    public bool radarIsOn = false;
+    public bool radarIsOn;
 
     public bool hasIR;
 
@@ -289,9 +289,20 @@ public class ShipScript : MonoBehaviour
         rb.mass = shipDesign.GetMass();
     }
 
-    // Initializes the marker object that will represent this ship on the radar screen
+    // Initializes the marker object that will represent this ship on the radar screen, initializes fields
     public void Startup()
     {
+        detected = false; // Start undetected and untracked
+        tracked = false;
+        if (hasActiveRadar) // Start with radar on only if the radar has active capabilities
+            radarIsOn = true;
+        else
+            radarIsOn = false;
+        iRSignature = baseIRSignature; // The IR signature should start as the base IR signature
+        missilesTargeting = 0; // Nothing is targeting this ship at the start
+        maneuverMode = ManeuverMode.Idle; // This ship is idle at the start
+        maxRange = 0; // This ship won't engage at the start
+        minRCS = 0; // This ship has no preferences for targets at the start
         float sqrDist = Vector3.SqrMagnitude(transform.position);
         float xscale = Mathf.Max(5 / (sqrDist / 1000 + 1), 0.2f) * 2;
         float yscale = Mathf.Min((sqrDist / 1000 + 1) / 5, 5) * 2;
@@ -305,27 +316,30 @@ public class ShipScript : MonoBehaviour
         rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1);
     }
 
-    // Sets the ship to be tracked and fully activates the radar marker
+    // Sets the ship to be tracked and fully activates the radar marker, activates collision checks
     public void setTracked()
     {
+        GetComponent<SphereCollider>().enabled = true;
         detected = true;
         tracked = true;
         marker.SetActive(true);
         rangeMarker.SetActive(true);
     }
 
-    // Sets the ship to be detected and only shows the direction of the ship on radar without range
+    // Sets the ship to be detected and only shows the direction of the ship on radar without range, deactivates collision checks
     public void setDetected()
     {
+        GetComponent<SphereCollider>().enabled = false;
         detected = true;
         tracked = false;
         marker.SetActive(true);
         rangeMarker.SetActive(false);
     }
 
-    // Sets the ship to be undetected and hides the radar marker
+    // Sets the ship to be undetected and hides the radar marker, deactivates collision checks
     public void setUndetected()
     {
+        GetComponent<SphereCollider>().enabled = false;
         detected = false;
         tracked = false;
         marker.SetActive(false);

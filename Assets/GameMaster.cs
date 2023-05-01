@@ -287,6 +287,10 @@ public class GameMaster : MonoBehaviour
                 // Set the tracked and detected fields of the friendly ship
                 friendlyShip.tracked = tracked;
                 friendlyShip.detected = detected;
+                if (tracked)
+                    friendlyShip.GetComponent<SphereCollider>().enabled = true;
+                else
+                    friendlyShip.GetComponent<SphereCollider>().enabled = false;
             }
             for (int j = 0; j < enemyTaskForces.Count; j++) // Loop through each enemy task force, friendlies will attempt detection on one enemy ship per enemy task force per frame
             {
