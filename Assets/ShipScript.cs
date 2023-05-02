@@ -6,7 +6,7 @@ public class ShipScript : MonoBehaviour
 {
     public enum ShipClass {Screen, Laser, Missile}
 
-    public enum ManeuverMode {Idle, Rendezvous, Hold, Intercept, Formation}
+    public enum ManeuverMode {Idle, Hold, Intercept, Formation}
 
     public ShipClass shipClass;
 
@@ -34,8 +34,6 @@ public class ShipScript : MonoBehaviour
 
     public bool hasRadar;
 
-    public bool hasActiveRadar;
-
     public bool radarIsOn;
 
     public bool hasIR;
@@ -62,7 +60,7 @@ public class ShipScript : MonoBehaviour
 
     public Vector3 gradient; // For Formation mode only
 
-    public Vector3 targetPosition; // For Rendezvous mode only
+    public Vector3 targetPosition; // For Rendezvous mode only DEPRECATE
 
     public Rigidbody rb; // This rigidbody
 
@@ -99,31 +97,13 @@ public class ShipScript : MonoBehaviour
         if (referenceBody == null || referenceBody == rb)
             return;
         switch (maneuverMode) {
-            case ManeuverMode.Rendezvous: // Deprecate, will no longer be used in favor of formation mode
-                relativeVelocity = rb.velocity - referenceBody.velocity;
-                relativePosition = rb.position - referenceBody.position - targetPosition;
-                if (relativePosition.Equals(Vector3.zero))
-                    targetVelocity = Vector3.zero;
-                else
-                    targetVelocity = -2 * relativePosition / Mathf.Sqrt(2 * Vector3.Magnitude(relativePosition) / (0.95f * thrust / rb.mass));
-                if (Vector3.SqrMagnitude(targetVelocity) < 0.0001)
-                    targetVelocity = Vector3.zero;
-                velocityChange = targetVelocity - relativeVelocity;
-                if (Vector3.SqrMagnitude(velocityChange) < 0.00000001)
-                    velocityChange = Vector3.zero;
-                if (deltaV * deltaV < Vector3.SqrMagnitude(velocityChange))
-                {
-                    rb.AddForce(Vector3.Normalize(velocityChange) * deltaV, ForceMode.VelocityChange);
-                    iRSignature = baseIRSignature + thrust;
-                }
-                else
-                {
-                    rb.AddForce(velocityChange, ForceMode.VelocityChange);
-                    iRSignature = baseIRSignature + (thrust * Vector3.Magnitude(velocityChange) / deltaV);
-                }
-                break;
             case ManeuverMode.Intercept: // Sets the behavior of this ship to intercept the target (referencBody) at maximum speed
-                if (referenceBody.GetComponent<ShipScript>().detected == false) // Cannot intercept an undetected target
+                if (!referenceBody.TryGetComponent<ShipScript>(out ShipScript targetShip))
+                {
+                    maneuverMode = ManeuverMode.Hold;
+                    break;
+                }
+                if (targetShip.detected == false) // Cannot intercept an undetected target
                     break;
                 relativeVelocity = rb.velocity - referenceBody.velocity;
                 relativePosition = rb.position - referenceBody.position; // Target position will always be the center of the target body (Vector3.zero), so is excluded from this calculation
@@ -199,22 +179,18 @@ public class ShipScript : MonoBehaviour
 
     public (bool, bool) Detect(ShipScript other) // Returns whether detection and tracking were achieved, respectively
     {
-        bool d = false; // Assume no detection yet
+        float radarSignal = 0;
+        if (other.radarIsOn) // The other ship's radar must be on for us to listen for its signal
+            radarSignal += other.radarPower / Vector3.SqrMagnitude(transform.position - other.transform.position); // The other ship's radar contributes to detection, but not tracking
         if (hasRadar) // If we have a radar, attempt both active and passive radar detection (only active radar detection can achieve a track)
         {
             float radarReturn = 0; // The radar return is used to determine whether tracking is achieved
             float rcs = other.radarCrossSection;
             if (radarIsOn) // The radar must be on to attempt active detection
                 radarReturn += radarPower * rcs / Mathf.Pow(Vector3.SqrMagnitude(transform.position - other.transform.position), 2); // The radar return depends on the rcs, radarPower, and distance
-            float radarSignal = radarReturn; // The radar signal is used to determine whether detection is achieved
-            if (other.radarIsOn) // The other ship's radar must be on for us to listen for its signal
-                radarSignal += other.radarPower / Vector3.SqrMagnitude(transform.position - other.transform.position); // The other ship's radar contributes to detection, but not tracking
+            radarSignal += radarReturn; // The radar signal is used to determine whether detection is achieved
             if (radarReturn * radarPower > 16) // If the radar gets a strong return with its own waves, tracking is achieved
-            {
                 return (true, true);
-            }
-            if (radarSignal * radarPower > 1) // If the radar gets a weak combined radar signal, only detection is achieved
-                d = true;
         }
         if (hasIR)
         {
@@ -224,11 +200,11 @@ public class ShipScript : MonoBehaviour
                 return (true, true);
             }
         }
-        return (d, false); // If tracking was not achieved, return the value of d and false for the tracking attempt
+        return (radarSignal * radarPower > 1, false); // If tracking was not achieved, return the passive detection attempt and false for the tracking attempt
     }
 
     // Attempts to select a target from the given list of options using the current rules of engagement
-    public void TrySelectTarget(List<List<GameObject>> taskForces)
+    public void TrySelectTarget(List<TaskForce> taskForces)
     {
         ShipScript bestCandidate = null;
         float sqrBestRange = maxRange * maxRange;
@@ -243,9 +219,9 @@ public class ShipScript : MonoBehaviour
                     return;
                 for (int i = 0; i < taskForces.Count; i++) // Loop over all task forces that might contain a valid target
                 {
-                    for (int j = 0; j < taskForces[i].Count; j++) // Loop over all ships in each task force
+                    for (int j = 0; j < taskForces[i].ships.Count; j++) // Loop over all ships in each task force
                     {
-                        ShipScript cur = taskForces[i][j].GetComponent<ShipScript>();
+                        ShipScript cur = taskForces[i].ships[j].GetComponent<ShipScript>();
                         if (!cur.detected || cur.radarCrossSection < minRCS)
                         {
                             continue; // If the current ship is not detected or is outside the rules of engagement, we must ignore it
@@ -278,8 +254,6 @@ public class ShipScript : MonoBehaviour
 
         hasRadar = shipDesign.HasRadar();
 
-        hasActiveRadar = shipDesign.HasActiveRadar();
-
         hasIR = shipDesign.HasIR();
 
         thrust = shipDesign.GetThrust();
@@ -300,7 +274,7 @@ public class ShipScript : MonoBehaviour
     {
         detected = false; // Start undetected and untracked
         tracked = false;
-        if (hasActiveRadar) // Start with radar on only if the radar has active capabilities
+        if (hasRadar) // Start with radar on only if the radar has active capabilities
             radarIsOn = true;
         else
             radarIsOn = false;
@@ -426,8 +400,6 @@ public class ShipDesign
 
     private bool hasRadar;
 
-    private bool hasActiveRadar;
-
     private bool hasIR;
 
     private float thrust;
@@ -442,11 +414,11 @@ public class ShipDesign
 
     private float mass;
 
-    public ShipDesign(bool hR, bool hAR, bool hI, float t, float rcs, float pow, float iSig, float iSens, float m)
+    public ShipDesign(ShipScript.ShipClass sC, bool hR, bool hI, float t, float rcs, float pow, float iSig, float iSens, float m)
     {
         useComponentBasedDesign = false;
+        shipClass = sC;
         hasRadar = hR;
-        hasActiveRadar = hAR;
         hasIR = hI;
         thrust = t;
         radarCrossSection = rcs;
@@ -470,14 +442,6 @@ public class ShipDesign
             return hasRadar;
         else
             return hasRadar; // Placeholder
-    }
-
-    public bool HasActiveRadar()
-    {
-        if (!useComponentBasedDesign)
-            return hasActiveRadar;
-        else
-            return hasActiveRadar; // Placeholder
     }
 
     public bool HasIR()
@@ -534,5 +498,71 @@ public class ShipDesign
             return mass;
         else
             return mass; // Placeholder
+    }
+}
+
+public class TaskForce
+{
+    public List<GameObject> ships;
+
+    public ShipScript.ShipClass shipClass;
+
+    public ShipScript.ManeuverMode maneuverMode;
+
+    public GameObject taskForceCenter;
+
+    public float targetRadius;
+
+    public GameObject target;
+
+    public GameObject targetCenter;
+
+    public float radarCrossSection;
+
+    public bool radarIsOn;
+
+    public float maxRange;
+
+    public float minRCS;
+
+    public TaskForce(List<GameObject> s, ShipScript.ShipClass sC, float rcs, GameObject tFC, bool rOn)
+    {
+        ships = s;
+        shipClass = sC;
+        maneuverMode = ShipScript.ManeuverMode.Idle;
+        taskForceCenter = tFC;
+        targetRadius = 5;
+        target = null;
+        targetCenter = null;
+        radarCrossSection = rcs;
+        radarIsOn = rOn;
+        maxRange = 0;
+        minRCS = 0;
+    }
+
+    public int EngagementRate()
+    {
+        int count = 0;
+        for (int i = 0; i < ships.Count; i++)
+        {
+            if (ships[i].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Intercept)
+                count++;
+        }
+        return count;
+    }
+
+    public void UpdateCenter()
+    {
+        if (ships.Count == 0)
+            return;
+        taskForceCenter.transform.position = Vector3.zero;
+        taskForceCenter.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        for(int i = 0; i < ships.Count; i++)
+        {
+            taskForceCenter.transform.position += ships[i].transform.position;
+            taskForceCenter.GetComponent<Rigidbody>().velocity += ships[i].GetComponent<Rigidbody>().velocity;
+        }
+        taskForceCenter.transform.position /= ships.Count;
+        taskForceCenter.GetComponent<Rigidbody>().velocity /= ships.Count;
     }
 }

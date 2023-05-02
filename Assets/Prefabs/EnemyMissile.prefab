@@ -45,7 +45,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.1
+  m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6599322556197208828
 Rigidbody:
@@ -75,7 +75,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 634749c4ebdfb20469fd2235330d7558, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shipClass: 0
+  shipClass: 2
   maneuverMode: 0
   smallSprite: {fileID: 7482667652216324306, guid: 75f5f34dc1b5347e0b8351032682f224, type: 3}
   mediumSprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
@@ -88,7 +88,6 @@ MonoBehaviour:
   detected: 0
   tracked: 0
   hasRadar: 0
-  hasActiveRadar: 0
   radarIsOn: 0
   hasIR: 0
   thrust: 0.2
@@ -99,7 +98,7 @@ MonoBehaviour:
   iRSensitivity: 0
   maxRange: 0
   minRCS: 0
-  targetRadius: 0
+  targetRadius: 5
   missilesTargeting: 0
   gradient: {x: 0, y: 0, z: 0}
   targetPosition: {x: 0, y: 0, z: 0}

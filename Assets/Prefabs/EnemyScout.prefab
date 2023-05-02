@@ -45,7 +45,7 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.01
+  m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &6599322556197208828
 Rigidbody:
@@ -88,7 +88,6 @@ MonoBehaviour:
   detected: 0
   tracked: 0
   hasRadar: 1
-  hasActiveRadar: 0
   radarIsOn: 1
   hasIR: 1
   thrust: 1
@@ -99,7 +98,7 @@ MonoBehaviour:
   iRSensitivity: 2500
   maxRange: 0
   minRCS: 0
-  targetRadius: 0
+  targetRadius: 5
   missilesTargeting: 0
   gradient: {x: 0, y: 0, z: 0}
   targetPosition: {x: 0, y: 0, z: 0}

@@ -9,6 +9,8 @@ public class DesignationScript : MonoBehaviour, IPointerClickHandler
 
     public GameObject creator;
 
+    public TaskForce taskForce;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -25,6 +27,6 @@ public class DesignationScript : MonoBehaviour, IPointerClickHandler
     {
         if (!gameMaster.activeInHierarchy)
             return;
-        gameMaster.GetComponent<GameMaster>().target = creator;
+        gameMaster.GetComponent<GameMaster>().SetTarget(creator, taskForce);
     }
 }
