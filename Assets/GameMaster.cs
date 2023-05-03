@@ -17,7 +17,11 @@ public class GameMaster : MonoBehaviour
 
     public GameObject fleetCenter; // The center of the player fleet, typically (0, 0, 0,), is the default target when the target variable is null
 
+    public AudioSource musicSource;
+
     public AudioSource alarmSource; // The GameMaster can control when to play the alarm sound effect
+
+    public GameObject pauseCanvas;
 
     public Slider radiusSlider;
 
@@ -41,8 +45,6 @@ public class GameMaster : MonoBehaviour
 
     public Text radarStatusText;
 
-    bool isPaused = false; // Deprecate
-
     int curTaskForce; // The index of the currently selected friendly task force
 
     List<TaskForce> taskForces; // The list of all TaskForces
@@ -50,8 +52,6 @@ public class GameMaster : MonoBehaviour
     List<TaskForce> friendlyTaskForces; // The list of only friendly TaskForces
 
     List<TaskForce> enemyTaskForces; // The list of only enemy TaskForces
-
-    bool gameOver = false; // Deprecate
     // Start is called before the first frame update
     void Start()
     {
@@ -70,10 +70,13 @@ public class GameMaster : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Deprecte isPaused, it's a dumb field to have anyways
-        if (isPaused)
+        // Deprecate isPaused, it's a dumb field to have anyways
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
+            musicSource.Pause();
             alarmSource.enabled = false;
+            pauseCanvas.SetActive(true);
+            gameObject.SetActive(false);
             return;
         }
         // XXX Change GameOver condition -- STOP REFERRING TO FRIENDLYSHIPS
@@ -81,7 +84,7 @@ public class GameMaster : MonoBehaviour
         //gameOver = true;
         // Setting the game master inactive will stop all children of the gamemaster, including their coroutines, preferable to changing the timescale
         // Deprecate, using timeScale to stop the game is inferior to simply deactivating the GameMaster and all its children
-        if (gameOver)
+        if (/*gameOver*/ false)
         {
             Time.timeScale = 0;
             return;
@@ -133,6 +136,7 @@ public class GameMaster : MonoBehaviour
         alarmSource.enabled = setAlarm;
         // End checks to activate or deactivate the missile warning (alarm)
     }
+
     /*
     public void DispatchMissile() // Deprecate, ships will use their rules of engagement to select targets
     {
@@ -156,7 +160,7 @@ public class GameMaster : MonoBehaviour
         {
             for (int j = 0; j < taskForces[i].ships.Count; j++) // Loop through all ships in the task force
             {
-                if (!taskForces[i].ships[j].TryGetComponent<ShipScript>(out ShipScript ship)) // If the ship no longer has a ShipScript (meaning it was destroyed), remove from the task force
+                if (!taskForces[i].ships[j]) // If the ship no longer has a ShipScript (meaning it was destroyed), remove from the task force
                 {
                     taskForces[i].ships.RemoveAt(j);
                     j--; // Since removal moves the tail of the list up, decrement the index for the next ship in the task force
@@ -406,9 +410,9 @@ public class GameMaster : MonoBehaviour
 
     void SpawnFriendlies()
     {
-        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Screen, true, true, 10, 100, 10000, 0.1f, 2500, 1000);
+        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, 10, 100, 10000, 1, 1, 10, 0.1f, 2500, 1000);
         List<GameObject> ships = RandomSpawn(friendlyPrefab, shipDesign, Vector3.zero, Vector3.zero, 10, 10);
-        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.GetRadarCrossSection(), Instantiate(fleetCenter, transform), true);
+        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
         for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
         {
             ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
@@ -416,9 +420,9 @@ public class GameMaster : MonoBehaviour
         taskForce.targetCenter = fleetCenter;
         taskForces.Add(taskForce);
         friendlyTaskForces.Add(taskForce);
-        shipDesign = new ShipDesign(ShipScript.ShipClass.Missile, false, true, 10, 1, 10, 0.1f, 50, 1);
+        shipDesign = new ShipDesign(ShipScript.ShipClass.Missile, false, 10, 1, 10, 0, 1, 0, 0.1f, 50, 1);
         ships = RandomSpawn(friendlyMissilePrefab, shipDesign, Vector3.zero, Vector3.zero, 50, 10);
-        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.GetRadarCrossSection(), Instantiate(fleetCenter, transform), true);
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
         for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
         {
             ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
@@ -434,9 +438,9 @@ public class GameMaster : MonoBehaviour
         Vector3 direction = Random.onUnitSphere;
         Vector3 spawnLocation = direction * Random.Range(450f, 500f);
         Vector3 spawnVelocity = -direction * Random.Range(1f, 2f);
-        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, true, 1, 100, 1000, 0.1f, 2500, 100);
+        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Screen, true, 1, 100, 1000, 0, 1, 10, 0.1f, 2500, 100);
         List<GameObject> ships = RandomSpawn(enemyPrefab, shipDesign, spawnLocation, spawnVelocity, 100, Random.Range(6, 10));
-        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Screen, shipDesign.GetRadarCrossSection(), Instantiate(fleetCenter, transform), true);
+        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Screen, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
         for(int i = 0; i < ships.Count; i++) // Designation needs to know the task force it is designating, how annoying
         {
             ships[i].GetComponent<ShipScript>().marker.GetComponent<DesignationScript>().taskForce = taskForce;
@@ -594,29 +598,33 @@ public class GameMaster : MonoBehaviour
         }
     }
 
-    IEnumerator TargetSelection() // Sets one ship per task force per frame to attempt to select a target
+    IEnumerator TargetSelection() // Sets all ships to attempt to select a target
     {
-        int i = 0; // With modulation, i will select the ship for this frame for each task force
+        bool activateLaserAlarm = false;
+        bool missileLaunch;
+        bool laserAttack;
         while (true)
         {
+            activateLaserAlarm = false;
             for (int j = 0; j < friendlyTaskForces.Count; j++) // Loop through each friendly task force, one friendly ship per friendly task force will attempt to find a target each frame
             {
-                if (friendlyTaskForces[j].ships.Count == 0) // Task force must have at least one ship to assign a target
-                    continue;
-                ShipScript friendlyShip = friendlyTaskForces[j].ships[i % friendlyTaskForces[j].ships.Count].GetComponent<ShipScript>(); // The ship that will attempt target selection
-                friendlyShip.TrySelectTarget(enemyTaskForces); // Try to select a target
+                for (int jj = 0; jj < friendlyTaskForces[j].ships.Count; jj++)
+                {
+                    ShipScript friendlyShip = friendlyTaskForces[j].ships[jj].GetComponent<ShipScript>(); // The ship that will attempt target selection
+                    friendlyShip.TrySelectTarget(enemyTaskForces); // Try to select a target
+                }
             }
             for (int j = 0; j < enemyTaskForces.Count; j++) // Loop through each enemy task force, one enemy ship per enemy task force will attempt to find a target each frame
             {
-                if (enemyTaskForces[j].ships.Count == 0) // Task force must have at least one ship to assign a target
-                    continue;
-                ShipScript enemyShip = enemyTaskForces[j].ships[i % enemyTaskForces[j].ships.Count].GetComponent<ShipScript>(); // The ship that will attempt target selection
-                enemyShip.TrySelectTarget(friendlyTaskForces); // Try to select a target
+                for (int jj = 0; jj < enemyTaskForces[j].ships.Count; jj++)
+                {
+                    ShipScript enemyShip = enemyTaskForces[j].ships[jj].GetComponent<ShipScript>(); // The ship that will attempt target selection
+                    (missileLaunch, laserAttack) =  enemyShip.TrySelectTarget(friendlyTaskForces); // Try to select a target
+                    if (laserAttack)
+                        activateLaserAlarm = true;
+                }
             }
-            if (i == int.MaxValue) // Don't let i overflow
-                i = 0;
-            else
-                i++; // Increment the selector for the next frame
+            //laserAlarm.enabled = activateLaserAlarm;
             yield return null;
         }
     }

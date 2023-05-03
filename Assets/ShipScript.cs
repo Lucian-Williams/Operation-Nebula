@@ -36,8 +36,6 @@ public class ShipScript : MonoBehaviour
 
     public bool radarIsOn;
 
-    public bool hasIR;
-
     public float thrust;
 
     public float radarCrossSection;
@@ -50,6 +48,14 @@ public class ShipScript : MonoBehaviour
 
     public float iRSensitivity;
 
+    public float laserPower;
+
+    public float hitPoints;
+
+    public float maxShieldPoints;
+
+    public float shieldPoints;
+
     public float maxRange; // Rule of Engagement, only engage targets below max range
 
     public float minRCS; // Rule of Engagement, only engage targets above minimum perceived size (estimated by radarCrossSection).
@@ -58,9 +64,11 @@ public class ShipScript : MonoBehaviour
 
     public int missilesTargeting = 0; // The number of missiles targeting this ship
 
+    public int lasersTargeting = 0; // The number of lasers targeting this ship
+
     public Vector3 gradient; // For Formation mode only
 
-    public Vector3 targetPosition; // For Rendezvous mode only DEPRECATE
+    public ShipScript laserTarget; // For lasers only
 
     public Rigidbody rb; // This rigidbody
 
@@ -75,10 +83,13 @@ public class ShipScript : MonoBehaviour
     // Update is called once per frame, uses the thrust to perform some maneuver program and updates the radar marker
     void Update()
     {
-
-        // isPaused shall be deprecated, ending the game shall be achieved by deactivating the GameMaster
-        //if (gameMaster.GetComponent<GameMaster>().isPaused)
-        //return;
+        shieldPoints += 0.01f * maxShieldPoints; // regenerate the shield points
+        if (shieldPoints > maxShieldPoints)
+            shieldPoints = maxShieldPoints;
+        if (missilesTargeting < 0) // Safety net in case missilesTargeting decrements too many times
+            missilesTargeting = 0;
+        if (lasersTargeting < 0) // Safety net in case lasersTargeting decrements too many times
+            lasersTargeting = 0;
         iRSignature = baseIRSignature; // Assume no thrust is used to start
         if (thrust == 0) // Can't change velocity if there is no thrust
             return;
@@ -95,7 +106,10 @@ public class ShipScript : MonoBehaviour
         marker.transform.position = new Vector3(MarkerBearing() * 7 / 180, MarkerElevation() * 7 / 180 + 1); // Update the position of the radar marker on screen
         rangeMarker.transform.localScale = new Vector3(xscale, yscale, 1); // Update the range marker for the new range
         if (referenceBody == null || referenceBody == rb)
+        {
+            maneuverMode = ManeuverMode.Hold;
             return;
+        }
         switch (maneuverMode) {
             case ManeuverMode.Intercept: // Sets the behavior of this ship to intercept the target (referencBody) at maximum speed
                 if (!referenceBody.TryGetComponent<ShipScript>(out ShipScript targetShip))
@@ -125,7 +139,7 @@ public class ShipScript : MonoBehaviour
                 break;
             case ManeuverMode.Formation: // Sets the behavior of this ship to enter a spherical formation with other ships with a common formation radius and common center of the formation
                 relativeVelocity = rb.velocity - referenceBody.velocity;
-                relativePosition = rb.position - referenceBody.position - targetPosition;
+                relativePosition = rb.position - referenceBody.position;
                 if (!relativePosition.Equals(Vector3.zero)) // We can only find our destination if we aren't exactly at the center of the formation
                 {
                     if (!(relativePosition + gradient).Equals(Vector3.zero)) // We can only find our destination if our gradient doesn't take us to the center of the formation
@@ -192,7 +206,7 @@ public class ShipScript : MonoBehaviour
             if (radarReturn * radarPower > 16) // If the radar gets a strong return with its own waves, tracking is achieved
                 return (true, true);
         }
-        if (hasIR)
+        if (iRSensitivity > 0)
         {
             float iRSignal = other.iRSignature / Vector3.SqrMagnitude(transform.position - other.transform.position); // All IR detection and tracking is passive only
             if (iRSignal * iRSensitivity > 1) // Determine if tracking has been achieved
@@ -204,28 +218,33 @@ public class ShipScript : MonoBehaviour
     }
 
     // Attempts to select a target from the given list of options using the current rules of engagement
-    public void TrySelectTarget(List<TaskForce> taskForces)
+    public (bool, bool) TrySelectTarget(List<TaskForce> taskForces)
     {
         ShipScript bestCandidate = null;
         float sqrBestRange = maxRange * maxRange;
         if (maxRange == 0)
-            return; // Rule of Engagement max range of 0 indicates Do Not Enage order, so return immediately
+        {
+            if (laserTarget) // Deselect laser target
+            {
+                lasersTargeting--;
+                laserTarget = null;
+            }
+            return (false, false); // Rule of Engagement max range of 0 indicates Do Not Enage order, so return immediately
+        }
         switch (shipClass)
         {
             case ShipClass.Screen:
-                return; // Screen ships only detect enemies and can't select targets
+                return (false, false); // Screen ships only detect enemies and can't select targets
             case ShipClass.Missile:
                 if (maneuverMode == ManeuverMode.Intercept) // Don't change targets
-                    return;
+                    return (false, false);
                 for (int i = 0; i < taskForces.Count; i++) // Loop over all task forces that might contain a valid target
                 {
                     for (int j = 0; j < taskForces[i].ships.Count; j++) // Loop over all ships in each task force
                     {
                         ShipScript cur = taskForces[i].ships[j].GetComponent<ShipScript>();
                         if (!cur.detected || cur.radarCrossSection < minRCS)
-                        {
                             continue; // If the current ship is not detected or is outside the rules of engagement, we must ignore it
-                        }
                         float sqrRange = Vector3.SqrMagnitude(transform.position - cur.transform.position);
                         sqrRange += 0.5f * cur.missilesTargeting * sqrRange; // Potential targets that already have missiles attacking them are deprioritized
                         if (sqrRange < sqrBestRange)
@@ -240,33 +259,83 @@ public class ShipScript : MonoBehaviour
                     referenceBody = bestCandidate.GetComponent<Rigidbody>();
                     bestCandidate.missilesTargeting++;
                     maneuverMode = ManeuverMode.Intercept;
+                    return (true, false);
                 }
-                return;
+                return (false, false);
             case ShipClass.Laser:
-                return;
+                for (int i = 0; i < taskForces.Count; i++) // Loop over all task forces that might contain a valid target
+                {
+                    for (int j = 0; j < taskForces[i].ships.Count; j++) // Loop over all ships in each task force
+                    {
+                        ShipScript cur = taskForces[i].ships[j].GetComponent<ShipScript>();
+                        if (!cur.tracked || cur.radarCrossSection < minRCS)
+                            continue; // If the current ship is not tracked or is outside the rules of engagement, we must ignore it
+                        float sqrRange = Vector3.SqrMagnitude(transform.position - cur.transform.position);
+                        sqrRange *= Mathf.Pow(0.8f, cur.lasersTargeting); // Potential targets that already have lasers attacking them are prioritized (to overcome shield regeneration)
+                        if (sqrRange < sqrBestRange)
+                        {
+                            bestCandidate = cur;
+                            sqrBestRange = sqrRange;
+                        }
+                    }
+                }
+                if (bestCandidate)
+                {
+                    if (bestCandidate != laserTarget)
+                    {
+                        if (laserTarget)
+                            lasersTargeting--;
+                        laserTarget = bestCandidate;
+                        laserTarget.lasersTargeting++;
+                    }
+                    float laserDamage = laserPower / Vector3.SqrMagnitude(laserTarget.transform.position - transform.position);
+                    if (laserTarget.shieldPoints > laserDamage) // If the shield is strong enough, only damage the shield
+                        laserTarget.shieldPoints -= laserDamage;
+                    else // Otherwise damage the HP and shield together
+                    {
+                        laserDamage -= laserTarget.shieldPoints;
+                        laserTarget.shieldPoints = 0;
+                        laserTarget.hitPoints -= laserDamage;
+                        if (laserTarget.hitPoints <= 0)
+                            Destroy(laserTarget.gameObject);
+                    }
+                    return (false, true);
+                }
+                if (laserTarget) // Deselect laser target if no suitable candidate
+                {
+                    lasersTargeting--;
+                    laserTarget = null;
+                }
+                return (false, false);
+            default:
+                return (false, false);
         }
     }
 
     // Uses a design to set the initial stats of this ship
     public void UseDesign(ShipDesign shipDesign)
     {
-        shipClass = shipDesign.GetShipClass();
+        shipClass = shipDesign.shipClass;
 
-        hasRadar = shipDesign.HasRadar();
+        hasRadar = shipDesign.hasRadar;
 
-        hasIR = shipDesign.HasIR();
+        thrust = shipDesign.thrust;
 
-        thrust = shipDesign.GetThrust();
+        radarCrossSection = shipDesign.radarCrossSection;
 
-        radarCrossSection = shipDesign.GetRadarCrossSection();
+        radarPower = shipDesign.radarPower;
 
-        radarPower = shipDesign.GetRadarPower();
+        laserPower = shipDesign.laserPower;
 
-        baseIRSignature = shipDesign.GetBaseIRSignature();
+        hitPoints = shipDesign.hitPoints;
 
-        iRSensitivity = shipDesign.GetIRSensitivity();
+        maxShieldPoints = shipDesign.maxShieldPoints;
 
-        rb.mass = shipDesign.GetMass();
+        baseIRSignature = shipDesign.baseIRSignature;
+
+        iRSensitivity = shipDesign.iRSensitivity;
+
+        rb.mass = shipDesign.mass;
     }
 
     // Initializes the marker object that will represent this ship on the radar screen, initializes fields
@@ -279,6 +348,7 @@ public class ShipScript : MonoBehaviour
         else
             radarIsOn = false;
         iRSignature = baseIRSignature; // The IR signature should start as the base IR signature
+        shieldPoints = maxShieldPoints; // The shield should start at full strength
         missilesTargeting = 0; // Nothing is targeting this ship at the start
         maneuverMode = ManeuverMode.Idle; // This ship is idle at the start
         maxRange = 0; // This ship won't engage at the start
@@ -332,11 +402,6 @@ public class ShipScript : MonoBehaviour
         rangeMarker.SetActive(false);
     }
 
-    void SetTargetPosition(Vector3 targetPosition)
-    {
-        this.targetPosition = targetPosition;
-    }
-
     // Calculates the bearing angle (not to be confused with heading angle) of this ship from the origin
     float MarkerBearing()
     {
@@ -379,125 +444,59 @@ public class ShipScript : MonoBehaviour
     // Destroys the colliding ships
     private void OnTriggerEnter(Collider other)
     {
-        ShipScript otherShip = other.GetComponent<ShipScript>();
-        if (otherShip.referenceBody != null && otherShip.maneuverMode == ManeuverMode.Intercept)
-            otherShip.referenceBody.GetComponent<ShipScript>().missilesTargeting--; // If the other ship was on interception course, decrement the missilesTargeting for the target
-        if (referenceBody != null && maneuverMode == ManeuverMode.Intercept)
-            referenceBody.GetComponent<ShipScript>().missilesTargeting--; // If this ship was on interception course, decrement the missilesTargeting for the target
-        Destroy(other.GetComponent<ShipScript>().marker);
-        Destroy(marker);
-        Destroy(other);
-        Destroy(this);
+        Destroy(other.gameObject);
+        Destroy(gameObject);
+    }
+
+    public void OnDestroy()
+    {
+        Destroy(marker); // Destroy the screen representation of this ship
+        Destroy(rangeMarker);
+        if (laserTarget) // Decrement the lasersTargeting value for any laser target
+            laserTarget.lasersTargeting--;
+        if (maneuverMode == ManeuverMode.Intercept && referenceBody && referenceBody.TryGetComponent<ShipScript>(out ShipScript other)) // Decrement the missilesTargeting value for any missile target
+            other.missilesTargeting--;
     }
 }
 
 // Represents a ship design that can either contain all of the stats of a ship or calculate the stats from a set of components
 public class ShipDesign
 {
-    private bool useComponentBasedDesign;
+    public ShipScript.ShipClass shipClass;
 
-    private ShipScript.ShipClass shipClass;
+    public bool hasRadar;
 
-    private bool hasRadar;
+    public float thrust;
 
-    private bool hasIR;
+    public float radarCrossSection;
 
-    private float thrust;
+    public float radarPower;
 
-    private float radarCrossSection;
+    public float laserPower;
 
-    private float radarPower;
+    public float hitPoints;
 
-    private float baseIRSignature;
+    public float maxShieldPoints;
 
-    private float iRSensitivity;
+    public float baseIRSignature;
 
-    private float mass;
+    public float iRSensitivity;
 
-    public ShipDesign(ShipScript.ShipClass sC, bool hR, bool hI, float t, float rcs, float pow, float iSig, float iSens, float m)
+    public float mass;
+
+    public ShipDesign(ShipScript.ShipClass sC, bool hR, float t, float rcs, float rPow, float lPow, float hP, float sP, float iSig, float iSens, float m)
     {
-        useComponentBasedDesign = false;
         shipClass = sC;
         hasRadar = hR;
-        hasIR = hI;
         thrust = t;
         radarCrossSection = rcs;
-        radarPower = pow;
+        radarPower = rPow;
+        laserPower = lPow;
+        hitPoints = hP;
+        maxShieldPoints = sP;
         baseIRSignature = iSig;
         iRSensitivity = iSens;
         mass = m;
-    }
-
-    public ShipScript.ShipClass GetShipClass()
-    {
-        if (!useComponentBasedDesign)
-            return shipClass;
-        else
-            return shipClass; // Placeholder
-    }
-
-    public bool HasRadar()
-    {
-        if (!useComponentBasedDesign)
-            return hasRadar;
-        else
-            return hasRadar; // Placeholder
-    }
-
-    public bool HasIR()
-    {
-        if (!useComponentBasedDesign)
-            return hasIR;
-        else
-            return hasIR; // Placeholder
-    }
-
-    public float GetThrust()
-    {
-        if (!useComponentBasedDesign)
-            return thrust;
-        else
-            return thrust; // Placeholder
-    }
-
-    public float GetRadarCrossSection()
-    {
-        if (!useComponentBasedDesign)
-            return radarCrossSection;
-        else
-            return radarCrossSection; // Placeholder
-    }
-
-    public float GetRadarPower()
-    {
-        if (!useComponentBasedDesign)
-            return radarPower;
-        else
-            return radarPower; // Placeholder
-    }
-
-    public float GetBaseIRSignature()
-    {
-        if (!useComponentBasedDesign)
-            return baseIRSignature;
-        else
-            return baseIRSignature; // Placeholder
-    }
-
-    public float GetIRSensitivity()
-    {
-        if (!useComponentBasedDesign)
-            return iRSensitivity;
-        else
-            return iRSensitivity; // Placeholder
-    }
-
-    public float GetMass()
-    {
-        if (!useComponentBasedDesign)
-            return mass;
-        else
-            return mass; // Placeholder
     }
 }
 
@@ -546,6 +545,8 @@ public class TaskForce
         for (int i = 0; i < ships.Count; i++)
         {
             if (ships[i].GetComponent<ShipScript>().maneuverMode == ShipScript.ManeuverMode.Intercept)
+                count++;
+            else if (ships[i].GetComponent<ShipScript>().laserTarget)
                 count++;
         }
         return count;
