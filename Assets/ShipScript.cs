@@ -74,12 +74,6 @@ public class ShipScript : MonoBehaviour
 
     public Rigidbody referenceBody; // Another ship's rigidbody
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
     // Update is called once per frame, uses the thrust to perform some maneuver program and updates the radar marker
     void Update()
     {
