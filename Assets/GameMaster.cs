@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameMaster : MonoBehaviour
 {
@@ -22,6 +23,12 @@ public class GameMaster : MonoBehaviour
     public AudioSource alarmSource; // The GameMaster can control when to play the alarm sound effect
 
     public GameObject pauseCanvas;
+
+    public GameObject tutorialCanvas;
+
+    public GameObject gameOverCanvas;
+
+    public Text gameOverText;
 
     public Slider radiusSlider;
 
@@ -47,6 +54,8 @@ public class GameMaster : MonoBehaviour
 
     int curTaskForce; // The index of the currently selected friendly task force
 
+    bool enemySpawningDone;
+
     List<TaskForce> taskForces; // The list of all TaskForces
 
     List<TaskForce> friendlyTaskForces; // The list of only friendly TaskForces
@@ -55,40 +64,93 @@ public class GameMaster : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Random.InitState(1776);
+        enemySpawningDone = false;
         taskForces = new List<TaskForce>();
         friendlyTaskForces = new List<TaskForce>();
         enemyTaskForces = new List<TaskForce>();
         curTaskForce = 0;
-        StartCoroutine(SpawnEnemies());
         StartCoroutine(TargetSelection());
         StartCoroutine(DetectionRoutine());
         StartCoroutine(GradientRoutine());
-        SpawnFriendlies();
+        if (SceneManager.GetActiveScene().name == "TutorialScene")
+        {
+            Random.InitState(2023);
+            StartCoroutine(SpawnEnemiesTutorial());
+            SpawnFriendliesTutorial();
+            Time.timeScale = 0;
+        }
+        else
+        {
+            StartCoroutine(EnemyCommand());
+            SpawnFriendlies();
+            Time.timeScale = 1;
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        // Deprecate isPaused, it's a dumb field to have anyways
-        if (Input.GetKeyDown(KeyCode.Escape))
+        // No more updates if the game is over
+        if (gameOverCanvas.activeInHierarchy)
+            return;
+        // Please please please get rid of these damn nulls
+        CleanShips();
+        // Disable pausing and unpausing during the tutorial
+        if (tutorialCanvas && tutorialCanvas.activeInHierarchy)
+            return;
+
+        // Pause the game if escape key is pressed and game is unpaused
+        if (Input.GetKeyDown(KeyCode.Escape) && Time.timeScale == 1)
         {
             musicSource.Pause();
             alarmSource.enabled = false;
             pauseCanvas.SetActive(true);
-            gameObject.SetActive(false);
-            return;
-        }
-        // XXX Change GameOver condition -- STOP REFERRING TO FRIENDLYSHIPS
-        //if (friendlyShips.Count == 0 && !gameOver)
-        //gameOver = true;
-        // Setting the game master inactive will stop all children of the gamemaster, including their coroutines, preferable to changing the timescale
-        // Deprecate, using timeScale to stop the game is inferior to simply deactivating the GameMaster and all its children
-        if (/*gameOver*/ false)
-        {
             Time.timeScale = 0;
             return;
         }
+        // Unpause the game if escape key is pressed and game is paused
+        else if (Input.GetKeyDown(KeyCode.Escape) && Time.timeScale == 0)
+        {
+            musicSource.Play();
+            pauseCanvas.SetActive(false);
+            Time.timeScale = 1;
+        }
+
+        int countThreats = 0;
+        for (int i = 0; i < enemyTaskForces.Count; i++)
+        {
+            if (enemyTaskForces[i].shipClass != ShipScript.ShipClass.Screen)
+                countThreats += enemyTaskForces[i].ships.Count;
+        }
+        if (enemySpawningDone && countThreats == 0)
+        {
+            musicSource.Stop();
+            alarmSource.enabled = false;
+            gameOverCanvas.SetActive(true);
+            gameOverText.text = "Victory!";
+            Time.timeScale = 0;
+        }
+
+        int countAssets = 0;
+        for (int i = 0; i < friendlyTaskForces.Count; i++)
+        {
+            if (friendlyTaskForces[i].shipClass != ShipScript.ShipClass.Screen)
+                countAssets += friendlyTaskForces[i].ships.Count;
+        }
+        if (countAssets == 0)
+        {
+            musicSource.Stop();
+            alarmSource.enabled = false;
+            gameOverCanvas.SetActive(true);
+            gameOverText.text = "Defeat";
+            Time.timeScale = 0;
+        }
+    }
+
+    // FixedUpdate is called on a fixed interval
+    void FixedUpdate()
+    {
+        // Check Game is Over
+        
         CleanShips();
         for (int i = 0; i < taskForces.Count; i++)
         {
@@ -101,6 +163,7 @@ public class GameMaster : MonoBehaviour
                 if (tempShip.maneuverMode == ShipScript.ManeuverMode.Intercept)
                     continue;
                 tempShip.maneuverMode = taskForces[i].maneuverMode;
+                tempShip.targetRadius = taskForces[i].targetRadius;
                 if (taskForces[i].targetCenter)
                     tempShip.referenceBody = taskForces[i].targetCenter.GetComponent<Rigidbody>();
             }
@@ -160,7 +223,7 @@ public class GameMaster : MonoBehaviour
         {
             for (int j = 0; j < taskForces[i].ships.Count; j++) // Loop through all ships in the task force
             {
-                if (!taskForces[i].ships[j]) // If the ship no longer has a ShipScript (meaning it was destroyed), remove from the task force
+                if (!taskForces[i].ships[j]) // If the ship no longer evists, remove from the task force
                 {
                     taskForces[i].ships.RemoveAt(j);
                     j--; // Since removal moves the tail of the list up, decrement the index for the next ship in the task force
@@ -185,7 +248,7 @@ public class GameMaster : MonoBehaviour
                 shipClassText = "Missile";
                 break;
             case ShipScript.ShipClass.Screen:
-                shipClassText = "Screen";
+                shipClassText = "None";
                 break;
             default:
                 shipClassText = "";
@@ -257,7 +320,7 @@ public class GameMaster : MonoBehaviour
         return ships;
     }
 
-    // Selects the next TaskForce
+    // Selects the next task force (for the player)
     public void NextTaskForce()
     {
         curTaskForce++;
@@ -267,7 +330,7 @@ public class GameMaster : MonoBehaviour
         roESlider.value = friendlyTaskForces[curTaskForce].maxRange / 1000;
     }
 
-    // Sets the formation target of the task force
+    // Sets the formation target of the task force (for the player)
     public void SetTarget(GameObject target, TaskForce taskForce)
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -281,7 +344,7 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].targetCenter = taskForce.taskForceCenter;
     }
 
-    // Sets the task force to hold positions relative to the reference position
+    // Sets the task force to hold positions relative to the reference position (for the player)
     public void HoldPositions()
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -294,7 +357,20 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].maneuverMode = ShipScript.ManeuverMode.Hold;
     }
 
-    // Sets the task force to idle engines
+    // Sets the task force to hold positions relative to the reference position (for the AI)
+    void HoldPositions(TaskForce taskForce)
+    {
+        for (int i = 0; i < taskForce.ships.Count; i++)
+        {
+            ShipScript ship = taskForce.ships[i].GetComponent<ShipScript>();
+            if (ship.maneuverMode == ShipScript.ManeuverMode.Intercept)
+                continue;
+            ship.maneuverMode = ShipScript.ManeuverMode.Hold;
+        }
+        taskForce.maneuverMode = ShipScript.ManeuverMode.Hold;
+    }
+
+    // Sets the task force to idle engines (for the player)
     public void IdleEngines()
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -307,7 +383,20 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].maneuverMode = ShipScript.ManeuverMode.Idle;
     }
 
-    // Unsets the reference target for the formation
+    // Sets the task force to idle engines (for the AI)
+    void IdleEngines(TaskForce taskForce)
+    {
+        for (int i = 0; i < taskForce.ships.Count; i++)
+        {
+            ShipScript ship = taskForce.ships[i].GetComponent<ShipScript>();
+            if (ship.maneuverMode == ShipScript.ManeuverMode.Intercept)
+                continue;
+            ship.maneuverMode = ShipScript.ManeuverMode.Idle;
+        }
+        taskForce.maneuverMode = ShipScript.ManeuverMode.Idle;
+    }
+
+    // Unsets the reference target for the formation (for the player)
     public void UnSetTarget()
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -321,7 +410,7 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].targetCenter = fleetCenter;
     }
 
-    // Sets the radius of the formation for the task force
+    // Sets the radius of the formation for the task force (for the player)
     public void SetRadius()
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -332,7 +421,7 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].targetRadius = radiusSlider.value * 295 + 5;
     }
 
-    // Sets the task force to form up on the reference position
+    // Sets the task force to form up on the reference position (for the player)
     public void SetFormation()
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -345,19 +434,41 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].maneuverMode = ShipScript.ManeuverMode.Formation;
     }
 
-    // Toggles the active radar sets in the task force on or off
+    // Sets the task force to form up on the reference position (for the AI)
+    void SetFormation(TaskForce taskForce, float targetRadius, GameObject formationCenter)
+    {
+        for (int i = 0; i < taskForce.ships.Count; i++)
+        {
+            ShipScript ship = taskForce.ships[i].GetComponent<ShipScript>();
+            if (ship.maneuverMode == ShipScript.ManeuverMode.Intercept)
+                continue;
+            ship.maneuverMode = ShipScript.ManeuverMode.Formation;
+            ship.targetRadius = targetRadius;
+            ship.referenceBody = formationCenter.GetComponent<Rigidbody>();
+        }
+        taskForce.maneuverMode = ShipScript.ManeuverMode.Formation;
+        taskForce.targetRadius = targetRadius;
+        taskForce.targetCenter = formationCenter;
+    }
+
+    // Toggles the active radar sets in the task force on or off (for the player)
     public void ToggleRadarStatus()
     {
+        bool anyHaveRadar = false;
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
         {
             ShipScript ship = friendlyTaskForces[curTaskForce].ships[i].GetComponent<ShipScript>();
             if (ship.hasRadar)
+            {
                 ship.radarIsOn = !friendlyTaskForces[curTaskForce].radarIsOn;
+                anyHaveRadar = true;
+            }
         }
-        friendlyTaskForces[curTaskForce].radarIsOn = !friendlyTaskForces[curTaskForce].radarIsOn;
+        if (anyHaveRadar)
+            friendlyTaskForces[curTaskForce].radarIsOn = !friendlyTaskForces[curTaskForce].radarIsOn;
     }
 
-    // Sets the maximum range of engagement of the task force
+    // Sets the maximum range of engagement of the task force (for the player)
     public void SetMaxRange()
     {
         for (int i = 0; i < friendlyTaskForces[curTaskForce].ships.Count; i++)
@@ -368,7 +479,7 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces[curTaskForce].maxRange = roESlider.value * 1000;
     }
 
-    // Toggles the task force between having everything as a valid target, only ships, or only capital ships
+    // Toggles the task force between having everything as a valid target, only ships, or only capital ships (for the player)
     public void ToggleRoE()
     {
         if (friendlyTaskForces[curTaskForce].minRCS == 10)
@@ -384,7 +495,7 @@ public class GameMaster : MonoBehaviour
         }
     }
 
-    // Sets the rules of engagment of the task force, which will only engage within a certain range and only ships of a minimum size estimated by RCS
+    // Sets the rules of engagment of the task force, which will only engage within a certain range and only ships of a minimum size estimated by RCS (for the AI)
     void SetROE(TaskForce taskForce, float maxRange, float minRCS)
     {
         for (int i = 0; i < taskForce.ships.Count; i++)
@@ -397,7 +508,7 @@ public class GameMaster : MonoBehaviour
         taskForce.minRCS = minRCS;
     }
 
-    // Sets the radar sets of the task force to val, could be false to achieve stealth
+    // Sets the radar sets of the task force to val, could be false to achieve stealth (for the AI)
     void SetRadarActive(TaskForce taskForce, bool val)
     {
         for (int i = 0; i < taskForce.ships.Count; i++)
@@ -410,9 +521,169 @@ public class GameMaster : MonoBehaviour
 
     void SpawnFriendlies()
     {
-        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, 10, 100, 10000, 1, 1, 10, 0.1f, 2500, 1000);
+        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, 1000, 5000, 1000000, 100, 100000, 1000, 5.0f, 500000, 200000);
+        List<GameObject> ships = RandomSpawn(friendlyPrefab, shipDesign, Vector3.right * 5, Vector3.zero, 1, 1);
+        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Laser, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
+        {
+            ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
+        }
+        taskForce.targetCenter = fleetCenter;
+        taskForces.Add(taskForce);
+        friendlyTaskForces.Add(taskForce);
+
+        shipDesign = new ShipDesign(ShipScript.ShipClass.Screen, true, 5, 10, 10000, 0, 1, 10, 0.1f, 2500, 100);
+        ships = RandomSpawn(friendlyPrefab, shipDesign, Vector3.zero, Vector3.zero, 80, 50);
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Screen, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
+        {
+            ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
+        }
+        taskForce.targetCenter = fleetCenter;
+        taskForces.Add(taskForce);
+        friendlyTaskForces.Add(taskForce);
+
+        shipDesign = new ShipDesign(ShipScript.ShipClass.Missile, false, 1, 1, 10, 0, 1, 0, 0.1f, 50, 1);
+        ships = RandomSpawn(friendlyMissilePrefab, shipDesign, Vector3.zero, Vector3.zero, 50, 30);
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), false);
+        for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
+        {
+            ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
+        }
+        taskForce.targetCenter = fleetCenter;
+        taskForces.Add(taskForce);
+        friendlyTaskForces.Add(taskForce);
+    }
+
+    // Spawns enemies and commands them
+    IEnumerator EnemyCommand()
+    {
+        bool foundThePlayer = false;
+        // Spawn loose formation of enemy scouts, Idle, they should try to loiter on the outskirts of the friendly fleet once they spot it (set formation on one of the friendly ships)
+        Vector3 direction = Random.onUnitSphere;
+        Vector3 spawnLocation = direction * 800;
+        Vector3 spawnVelocity = -direction * Random.Range(3f, 4f);
+        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Screen, true, 1, 10, 10000, 0, 1, 10, 0.1f, 2500, 100);
+        List<GameObject> ships = RandomSpawn(enemyPrefab, shipDesign, spawnLocation, spawnVelocity, 500, Random.Range(24, 40));
+        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Screen, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        for (int i = 0; i < ships.Count; i++) // DesignationScript needs to know the task force it is designating, how annoying
+        {
+            ships[i].GetComponent<ShipScript>().marker.GetComponent<DesignationScript>().taskForce = taskForce;
+        }
+        taskForces.Add(taskForce);
+        enemyTaskForces.Add(taskForce);
+
+        int initialStrength = taskForce.ships.Count;
+
+
+        // The AI now waits to either find the player or be attacked
+        while (!foundThePlayer)
+        {
+            yield return null;
+            if (taskForce.ships.Count < initialStrength)
+            {
+                break;
+            }
+            else
+            {
+                for (int i = 0; i < friendlyTaskForces.Count && !foundThePlayer; i++)
+                {
+                    for (int j = 0; j < friendlyTaskForces[i].ships.Count; j++)
+                    {
+                        if (friendlyTaskForces[i].ships[j].GetComponent<ShipScript>().detected && Vector3.SqrMagnitude(friendlyTaskForces[i].ships[j].transform.position) < 40000)
+                        {
+                            foundThePlayer = true;
+                            SetFormation(taskForce, 100f, fleetCenter);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // The AI now gets its rapid response forces involved
+        // Spawn loose formation of enemy missiles, they should have aggressive ROE with Idle maneuvering
+
+        direction = Random.onUnitSphere;
+        spawnLocation = direction * 500;
+        spawnVelocity = -direction * Random.Range(4f, 7f);
+        shipDesign = new ShipDesign(ShipScript.ShipClass.Missile, false, 0.5f, 1, 0, 0, 1, 10, 0.05f, 500, 0.5f);
+        ships = RandomSpawn(enemyMissilePrefab, shipDesign, spawnLocation, spawnVelocity, 500, Random.Range(24, 40));
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), false);
+        for (int i = 0; i < ships.Count; i++) // Designation needs to know the task force it is designating, how annoying
+        {
+            ships[i].GetComponent<ShipScript>().marker.GetComponent<DesignationScript>().taskForce = taskForce;
+        }
+        if (foundThePlayer)
+        {
+            SetFormation(taskForce, 10, fleetCenter);
+            SetROE(taskForce, 100, 10);
+        }
+        else
+        {
+            SetROE(taskForce, 200, 10);
+        }
+        taskForces.Add(taskForce);
+        enemyTaskForces.Add(taskForce);
+
+        while (Time.timeSinceLevelLoad < 90)
+        {
+            yield return null;
+            if (!foundThePlayer)
+            {
+                for (int i = 0; i < friendlyTaskForces.Count && !foundThePlayer; i++)
+                {
+                    for (int j = 0; j < friendlyTaskForces[i].ships.Count; j++)
+                    {
+                        if (friendlyTaskForces[i].ships[j].GetComponent<ShipScript>().detected && Vector3.SqrMagnitude(friendlyTaskForces[i].ships[j].transform.position) < 40000)
+                        {
+                            foundThePlayer = true;
+                            SetFormation(taskForce, 10, fleetCenter);
+                            SetROE(taskForce, 100, 10);
+                            SetFormation(taskForces[0], 100, fleetCenter);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        direction = Vector3.right;
+        spawnLocation = direction * 800;
+        spawnVelocity = -direction * Random.Range(4f, 7f);
+        shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, 200, 5000, 1000000, 0, 100000, 1000, 5.0f, 500000, 200000);
+        ships = RandomSpawn(enemyPrefab, shipDesign, spawnLocation, spawnVelocity, 50, 1);
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Laser, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        for (int i = 0; i < ships.Count; i++) // Designation needs to know the task force it is designating, how annoying
+        {
+            ships[i].GetComponent<ShipScript>().marker.GetComponent<DesignationScript>().taskForce = taskForce;
+        }
+        SetFormation(taskForce, 10, fleetCenter);
+        SetROE(taskForce, 100, 0);
+        taskForces.Add(taskForce);
+        enemyTaskForces.Add(taskForce);
+
+        shipDesign = new ShipDesign(ShipScript.ShipClass.Missile, false, 1f, 1, 0, 0, 1, 10, 0.05f, 500, 0.5f);
+        ships = RandomSpawn(enemyMissilePrefab, shipDesign, spawnLocation, spawnVelocity, 500, Random.Range(50, 60));
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), false);
+        for (int i = 0; i < ships.Count; i++) // Designation needs to know the task force it is designating, how annoying
+        {
+            ships[i].GetComponent<ShipScript>().marker.GetComponent<DesignationScript>().taskForce = taskForce;
+        }
+        SetFormation(taskForce, 100, taskForces[2].taskForceCenter);
+        SetROE(taskForce, 80, 0);
+        taskForces.Add(taskForce);
+        enemyTaskForces.Add(taskForce);
+
+        enemySpawningDone = true;
+        yield return null;
+    }
+
+    void SpawnFriendliesTutorial()
+    {
+        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, 10, 100, 10000, 100, 1, 10, 0.1f, 2500, 1000);
         List<GameObject> ships = RandomSpawn(friendlyPrefab, shipDesign, Vector3.zero, Vector3.zero, 10, 10);
-        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Laser, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
         for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
         {
             ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
@@ -422,7 +693,7 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces.Add(taskForce);
         shipDesign = new ShipDesign(ShipScript.ShipClass.Missile, false, 10, 1, 10, 0, 1, 0, 0.1f, 50, 1);
         ships = RandomSpawn(friendlyMissilePrefab, shipDesign, Vector3.zero, Vector3.zero, 50, 10);
-        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        taskForce = new TaskForce(ships, ShipScript.ShipClass.Missile, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), false);
         for (int i = 0; i < ships.Count; i++) // Set the friendly task force to automatically have the fleet center as the formation target
         {
             ships[i].GetComponent<ShipScript>().referenceBody = fleetCenter.GetComponent<Rigidbody>();
@@ -432,33 +703,24 @@ public class GameMaster : MonoBehaviour
         friendlyTaskForces.Add(taskForce);
     }
 
-    IEnumerator SpawnEnemies() // XXX Complete
+    IEnumerator SpawnEnemiesTutorial()
     {
-        // Spawn loose formation of enemy scouts, Idle, they should try to loiter on the outskirts of the friendly fleet once they spot it (set formation on one of the friendly ships)
         Vector3 direction = Random.onUnitSphere;
-        Vector3 spawnLocation = direction * Random.Range(450f, 500f);
+        Vector3 spawnLocation = direction * Random.Range(100f, 150f);
         Vector3 spawnVelocity = -direction * Random.Range(1f, 2f);
-        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Screen, true, 1, 100, 1000, 0, 1, 10, 0.1f, 2500, 100);
+        ShipDesign shipDesign = new ShipDesign(ShipScript.ShipClass.Laser, true, 1, 100, 1000, 100, 1, 10, 0.1f, 2500, 100);
         List<GameObject> ships = RandomSpawn(enemyPrefab, shipDesign, spawnLocation, spawnVelocity, 100, Random.Range(6, 10));
-        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Screen, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
-        for(int i = 0; i < ships.Count; i++) // Designation needs to know the task force it is designating, how annoying
+        TaskForce taskForce = new TaskForce(ships, ShipScript.ShipClass.Laser, shipDesign.radarCrossSection, Instantiate(fleetCenter, transform), true);
+        for (int i = 0; i < ships.Count; i++) // DesignationScript needs to know the task force it is designating, how annoying
         {
             ships[i].GetComponent<ShipScript>().marker.GetComponent<DesignationScript>().taskForce = taskForce;
         }
         taskForces.Add(taskForce);
         enemyTaskForces.Add(taskForce);
-        while (true)
-            yield return new WaitForSeconds(60);
-
-        // Wait for 20 seconds
-        // Spawn loose formation of enemy missiles, they should have aggressive ROE with Idle maneuvering
-        // Simultaneous spawn of more scouts, they should immediately set formation on the world origin
-        // Simultaneous spawn of stealth missiles, they should be Idle with only IR sensors and small RCS, they should have cautious ROE so they can close the distance and penetrate the screen
-        // Wait for 30 seconds
-        // Spawn large fleet consisting of a screen in formation around the center of the fleet, laser capital ships in the middle, missile interceptors, and offensive missiles
-        // Win condition is the player destroying all enemy offensive capabilities or all enemy offensive ships drifting over 500 km away
-        // Loss condition is the player losing all offensive capabilities
+        enemySpawningDone = true;
+        yield return null;
     }
+
     /*
     IEnumerator MissileSpawn() // XXX Deprecate
     {
@@ -499,6 +761,8 @@ public class GameMaster : MonoBehaviour
         int i = 0; // With modulation, i will select the ship for this frame for each task force
         while (true)
         {
+            while (Time.timeScale == 0)
+                yield return null;
             for (int j = 0; j < friendlyTaskForces.Count; j++) // Loop through each friendly task force, enemies will attempt detection on one friendly ship per friendly task force per frame
             {
                 if (friendlyTaskForces[j].ships.Count == 0) // Can't detect or track empty task forces
@@ -567,9 +831,11 @@ public class GameMaster : MonoBehaviour
 
     IEnumerator GradientRoutine() // Computes the formation gradient for one ship per task force per frame to improve performance
     {
-        int i = 0; // With modulation, i will select the ship for this frame for each task force
+        int i = 0; // With modulo op, i will select the ship for this frame for each task force
         while (true)
         {
+            while (Time.timeScale == 0)
+                yield return null;
             for (int j = 0; j < taskForces.Count; j++) // Loop through each task force
             {
                 if (taskForces[j].ships.Count == 0) // Can't compute gradients for empty task forces
@@ -605,6 +871,8 @@ public class GameMaster : MonoBehaviour
         bool laserAttack;
         while (true)
         {
+            while (Time.timeScale == 0)
+                yield return null;
             activateLaserAlarm = false;
             for (int j = 0; j < friendlyTaskForces.Count; j++) // Loop through each friendly task force, one friendly ship per friendly task force will attempt to find a target each frame
             {

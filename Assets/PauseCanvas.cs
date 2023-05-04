@@ -11,9 +11,10 @@ public class PauseCanvas : MonoBehaviour
 
     public void Play()
     {
-        gameMaster.SetActive(true);
         musicSource.Play();
         gameObject.SetActive(false);
+        Time.timeScale = 1;
+        return;
     }
 
     public void MainMenu()

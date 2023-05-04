@@ -74,8 +74,8 @@ public class ShipScript : MonoBehaviour
 
     public Rigidbody referenceBody; // Another ship's rigidbody
 
-    // Update is called once per frame, uses the thrust to perform some maneuver program and updates the radar marker
-    void Update()
+    // FixedUpdate is called on fixed intervals, uses the thrust to perform some maneuver program and updates the radar marker
+    void FixedUpdate()
     {
         shieldPoints += 0.01f * maxShieldPoints; // regenerate the shield points
         if (shieldPoints > maxShieldPoints)
